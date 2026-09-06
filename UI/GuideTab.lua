@@ -337,12 +337,14 @@ local function syncHeader()
     header:SetText(QuestPrism.Sources.GetStatusText())
     y = y + numberOr(header:GetStringHeight(), 12) + 8
 
+    -- The container stops short of the panel's right edge; the divider line and the
+    -- scroll bar live in the gap beyond it.
     listInset:ClearAllPoints()
     listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", 2, -(y - 2))
-    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 4)
+    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -28, 4)
     scroll:ClearAllPoints()
-    scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 4, -4)
-    scroll:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -22, 4)
+    scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 6, -6)
+    scroll:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -6, 6)
     emptyText:ClearAllPoints()
     emptyText:SetPoint("TOP", listInset, "TOP", 0, -30)
 end
@@ -604,16 +606,26 @@ local function createUI()
     header:SetJustifyH("LEFT")
     header:SetWordWrap(true)
 
-    -- The list sits in a bordered inset, like Blizzard's own quest list, rather than
-    -- floating on the panel background.
-    listInset = CreateFrame("Frame", nil, panel, "InsetFrameTemplate")
+    -- The list sits in the quest log's own bordered container (the questlog-frame
+    -- atlas, stretched, exactly as Blizzard's QuestLogBorderFrameTemplate uses it)
+    -- rather than a generic inset, with the thin divider line the quest log draws
+    -- between its list and its scroll bar.
+    listInset = CreateFrame("Frame", nil, panel)
+    listInset.Border = listInset:CreateTexture(nil, "BORDER")
+    listInset.Border:SetAllPoints()
+    pcall(listInset.Border.SetAtlas, listInset.Border, "questlog-frame")
+    listInset.ScrollLine = listInset:CreateTexture(nil, "ARTWORK")
+    listInset.ScrollLine:SetPoint("TOPRIGHT", listInset, "TOPRIGHT", 2, 0)
+    listInset.ScrollLine:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", 2, 3)
+    pcall(listInset.ScrollLine.SetAtlas, listInset.ScrollLine, "questlog_line_scrollbar")
 
     -- Plain scroll frame plus the modern thin scroll bar, the same pairing the
     -- settings window uses, instead of UIPanelScrollFrameTemplate's chunky legacy bar.
+    -- The bar sits outside the container, on the side, as the quest log's does.
     scroll = CreateFrame("ScrollFrame", nil, panel)
     scrollBar = CreateFrame("EventFrame", nil, panel, "MinimalScrollBar")
-    scrollBar:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 6, 0)
-    scrollBar:SetPoint("BOTTOMLEFT", scroll, "BOTTOMRIGHT", 6, 0)
+    scrollBar:SetPoint("TOPLEFT", listInset, "TOPRIGHT", 8, -2)
+    scrollBar:SetPoint("BOTTOMLEFT", listInset, "BOTTOMRIGHT", 8, 2)
     if ScrollUtil and ScrollUtil.InitScrollFrameWithScrollBar then
         pcall(ScrollUtil.InitScrollFrameWithScrollBar, scroll, scrollBar)
     end

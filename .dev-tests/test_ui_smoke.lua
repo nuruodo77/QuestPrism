@@ -733,8 +733,10 @@ test("the guide list has plate headers in a bordered inset, and they collapse", 
     C_QuestLog.GetTitleForQuestID = function(id) return "Quest " .. id end
     QuestPrism.GuideTab.Select(); MOCK.flushTimers()
 
-    assertTrue(QuestPrism.GuideTab.GetListInset() ~= nil, "inset created")
-    assertEq(QuestPrism.GuideTab.GetListInset().template, "InsetFrameTemplate")
+    local inset = QuestPrism.GuideTab.GetListInset()
+    assertTrue(inset ~= nil, "container created")
+    assertEq(inset.Border.atlas, "questlog-frame", "the quest log's own border art")
+    assertEq(inset.ScrollLine.atlas, "questlog_line_scrollbar", "divider before the scroll bar")
     local headers = QuestPrism.GuideTab.GetActiveHeaders()
     assertEq(#headers, 1, "one section: to pick up")
     assertEq(headers[1].sectionKey, "guideCollapsedToPickUp")

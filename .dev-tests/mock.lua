@@ -49,7 +49,9 @@ function frameMT:SetFrameLevel() end
 function frameMT:GetFrameLevel() return 1 end
 function frameMT:GetParent() return self.parent end
 function frameMT:CreateTexture() return setmetatable({ shown = true, children = {}, scripts = {}, events = {}, parent = self,
-    SetTexture = function() end, SetAtlas = function() end, SetAllPoints = function() end, SetBlendMode = function() end }, frameMT) end
+    SetTexture = function(self, t) self.texture = t end,
+    SetAtlas = function(self, a) self.atlas = a end,
+    SetAllPoints = function() end, SetBlendMode = function() end }, frameMT) end
 function frameMT:RegisterForDrag() end
 function frameMT:RegisterForClicks() end
 function frameMT:OnReleased() end

@@ -58,8 +58,10 @@ they live. Your saved filters and presets carry over.
   bar beside the quest log's modern one. It now uses the same thin bar as the settings
   window.
 - The map tab's sections were bare text on a flat background. They are now the game's
-  own list-header plates, which collapse when clicked and remember that per character,
-  and the list sits in a bordered inset like Blizzard's quest list beside it.
+  own list-header plates, which collapse when clicked and remember that per character.
+  The list sits in the quest log's own bordered container, with the scroll bar outside
+  it on the side and the same divider line the quest log draws, so the tab reads as
+  part of the quest log rather than a panel dropped into it.
 
 **Elsewhere**
 
