@@ -1,6 +1,26 @@
 # Changelog
 
-## 1.0.0-beta3
+## 1.0.0
+
+Initial release.
+
+- Filter world map quest pins by type, named as the Map Legend names them: Campaign,
+  Important, Legendary, Meta, Repeatable, Local Story and Events, plus Trivial Quests
+  through the game's own tracking filter (which also covers the minimap) and World Quests.
+- One rule everywhere: a ticked row is visible. Unticking World Quests also removes
+  their objective tracker section, the "World Quest" entry banner and the completion
+  alerts.
+- Follow my guide: your Zygor or RestedXP guide, or the BtWQuests chain you last opened,
+  scoped to the current step, the next few steps, or the whole guide.
+- The objective tracker follows the same type and guide filters; quests are hidden from
+  the list, never untracked.
+- A QuestPrism tab on the world map's side panel lists the guide's quests in guide
+  order, with a settings menu for the source and the scope.
+- A settings window built on Blizzard's own templates: four built-in presets plus your
+  own, filters per character or account-wide, solo mode, hide or dim, a quick menu on
+  the map and minimap buttons, two keybindings, and an Escape-menu page.
+
+**Since the beta builds**
 
 A full pass over the settings: what the controls are called, what they mean, and where
 they live. Your saved filters and presets carry over.
@@ -91,42 +111,3 @@ they live. Your saved filters and presets carry over.
 - Every button in the addon, in the window and on the map tab, uses the game's modern
   three-slice button art instead of the legacy panel-button textures. A client without
   that template keeps the old one.
-
-## 1.0.0-beta2
-
-- Block world quests now also stops the "World Quest" banner that slides into the tracker
-  when you walk into one. This was the title that stayed visible in beta1.
-- The block drives the map's own "World Quests" switch (CVar `questPOIWQ`), which covers the
-  world map and the flight map without touching any pin; the pin filter stays as a fallback
-  for World Quest List. The switch is put back when the block is lifted, if it was on before.
-- Completion alerts are swallowed while blocked instead of queued, so nothing is released
-  when the block is lifted.
-- `/questprism tracker` reports all four surfaces.
-
-## 1.0.0-beta1
-
-First public beta. Everything below is in; feedback welcome through the CurseForge comments
-with a BugSack report when something breaks.
-
-Known issue (fixed in beta2): with "Block world quests" on, the "World Quest" entry banner
-still played.
-
-## 1.0.0 (in progress)
-
-Initial release.
-
-- Filter world map quest pins by type: Campaign, Important, Legendary, Meta, Repeatable,
-  Local Story and Expedition. Trivial quests use the game's own tracking filter, which
-  also covers the minimap.
-- Block world quests: one switch hides their map pins, the World Quests section of the
-  objective tracker and the "World Quest Complete" alerts.
-- Follow my guide: show only the quests of your Zygor or RestedXP guide, or of the
-  BtWQuests chain you last opened, with a scope of the current step, the next few steps,
-  or the whole guide.
-- The objective tracker follows the same type and guide filters (quests are hidden from
-  the list, never untracked).
-- QuestPrism tab on the world map's side panel listing the guide's quests in guide order,
-  with scope buttons and right-click tracking.
-- Settings window built on Blizzard's UI templates: named presets, account-wide filters,
-  solo mode, dim instead of hide, hidden-pin counter, quick menu on the map and minimap
-  buttons, two keybindings, Escape-menu options page.

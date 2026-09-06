@@ -39,10 +39,6 @@ Next to Quests, Events and Map Legend you get a QuestPrism tab: the guide's cont
 
 Left-click the QuestPrism button at the top right of the world map, or the minimap button, or type `/questprism` (also `/lens`). Right-click either button for the quick menu.
 
-## Beta
-
-This is a beta. Everything described here works in my own play, but it has not had many other eyes yet.
-
 ## Good to know
 
 QuestPrism reads three parts of Blizzard's interface that aren't public API: the world map's pin pools, the objective tracker's quest modules, and the quest-log side panel. Each is guarded so that a Blizzard change disables the feature rather than breaking your UI, but those are the places most likely to need an update after a major patch. If something looks off after a patch, a BugSack report in the comments is the fastest way to get it fixed.

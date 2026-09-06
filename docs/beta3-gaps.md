@@ -65,8 +65,10 @@ Everything below the in-game checks is ready; the package is reproducible with
 - [x] **Store description.** `docs/curseforge-description.md` matches the beta3 UI.
 - [x] **Package.** 30 files, ~195 KB, one `QuestPrism/` folder, no dev files, every TOC
   entry present.
-- [x] **Upload.** Done 2026-09-06 by pushing tag `v1.0.0-beta3`: the release workflow
-  packaged it, uploaded it to CurseForge project 1683615 as a beta file for 12.1.0, and
-  cut a GitHub prerelease with the zip attached. Tags follow the existing `v` prefix.
-  The two older tags on this machine point at the pre-reset history and must never be
-  pushed; push tags by name, never `--tags`.
+- [x] **Upload.** Shipped as **1.0.0**, a full release, on 2026-09-06 by pushing tag
+  `v1.0.0`: the release workflow packaged it, uploaded it to CurseForge project 1683615
+  as a release file for 12.1.0, and cut a GitHub release with the zip attached. The beta
+  labelling was dropped first: the beta3 tag and GitHub prerelease were removed, and the
+  two pre-reset beta tags on this machine were deleted, so no tag anywhere points at the
+  old history. Tags keep the `v` prefix; the beta3 file uploaded earlier that day is still
+  listed on CurseForge unless removed there by hand.

@@ -2,7 +2,7 @@
 ## Title: QuestPrism
 ## Notes: A clear view of your quests: filter the map, minimap and objective tracker by quest type, or follow only your guide
 ## Author: Nuruodo
-## Version: 1.0.0-beta3
+## Version: 1.0.0
 ## SavedVariablesPerCharacter: QuestPrismCharDB
 ## SavedVariables: QuestPrismDB
 ## OptionalDeps: ZygorGuidesViewer, RXPGuides, BtWQuests
