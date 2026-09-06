@@ -1,0 +1,43 @@
+name: Tests
+
+# Everything that can be checked without the game runs here on every push: the Lua
+# syntax check, the logic tests against the WoW API mock, and a package build so a
+# broken .pkgmeta or a TOC that loads a missing file is caught before a tag exists.
+#
+# Deliberately does not upload anything. Releasing stays a manual decision: push a
+# tag and the release workflow does the rest.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install the Lua runtime used by the tests
+        run: pip install lupa
+
+      - name: Syntax check and logic tests
+        run: python .dev-tests/run_tests.py
+
+      - name: Build the package
+        run: python .dev-tests/build_release.py
+
+      - name: Keep the build for inspection
+        uses: actions/upload-artifact@v7
+        with:
+          name: QuestPrism-package
+          path: dist/*.zip
+          if-no-files-found: error

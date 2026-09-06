@@ -134,7 +134,7 @@ end)
 test("locales define every key the code references", function()
     local missing = {}
     for _, rel in ipairs({ "QuestPrism.lua", "Core/Settings.lua", "Core/Filter.lua", "Hooks/WorldMap.lua", "UI/MinimapButton.lua", "UI/Options.lua", "UI/Panel.lua", "UI/QuickMenu.lua", "Hooks/Minimap.lua", "Hooks/ObjectiveTracker.lua", "Hooks/WorldQuests.lua", "UI/GuideTab.lua", "Core/Sources.lua", "Core/Rules.lua", "Sources/Zygor.lua", "Sources/RXP.lua", "Sources/BtWQuests.lua" }) do
-        local f = io.open("C:/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns/QuestPrism/" .. rel, "r")
+        local f = io.open(ADDON_PATH .. rel, "r")
         local src = f:read("*a"); f:close()
         for key in src:gmatch("QuestPrism_L%.([A-Z_]+)") do
             if QuestPrism_L[key] == nil then missing[key] = true end
@@ -485,12 +485,12 @@ end)
 
 
 test("Bindings.xml exists, is referenced by the TOC, and its header/name globals are localized", function()
-    local f = io.open("C:/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns/QuestPrism/Bindings.xml", "r")
+    local f = io.open(ADDON_PATH .. "Bindings.xml", "r")
     assertTrue(f ~= nil, "Bindings.xml present"); local xml = f:read("*a"); f:close()
     assertTrue(xml:find('name="QUESTPRISM_TOGGLE"', 1, true) ~= nil)
     assertTrue(xml:find('name="QUESTPRISM_GUIDEONLY"', 1, true) ~= nil)
     assertTrue(type(BINDING_HEADER_QUESTPRISM) == "string" and type(BINDING_NAME_QUESTPRISM_TOGGLE) == "string" and type(BINDING_NAME_QUESTPRISM_GUIDEONLY) == "string")
-    local t = io.open("C:/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns/QuestPrism/QuestPrism.toc", "r")
+    local t = io.open(ADDON_PATH .. "QuestPrism.toc", "r")
     local toc = t:read("*a"); t:close()
     -- WoW loads Bindings.xml from the addon root by itself; listing it in the TOC makes
     -- the frame-XML loader parse it and warn "Unrecognized XML: Binding".

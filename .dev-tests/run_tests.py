@@ -47,6 +47,9 @@ def fresh_runtime():
     lua = LuaRuntime()
     # Let tests load extra addon files (UI smoke tests)
     lua.globals().LOAD_ADDON_FILE = lambda rel: lua.execute(read(os.path.join(ADDON, rel)))
+    # Tests that read addon files directly (locale keys, Bindings.xml) resolve
+    # them from here, so the suite runs anywhere, CI included.
+    lua.globals().ADDON_PATH = ADDON.replace(os.sep, '/') + '/'
     lua.execute(read(os.path.join(HERE, "mock.lua")))
     for rel in CORE_FILES:
         path = os.path.join(ADDON, rel)
