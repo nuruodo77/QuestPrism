@@ -21,10 +21,13 @@ local MODE = "QuestPrism"
 local ICON = "Interface\\AddOns\\QuestPrism\\Textures\\icon"
 local RENDER_DELAY = 0.1
 local LOOKAHEAD_MIN, LOOKAHEAD_MAX = 1, 10
--- The list fills the panel. Everything else lives in a narrow strip down the right,
--- the way the quest log keeps its own scroll bar: the settings cog at the top of it,
--- the scroll bar running beneath.
-local SIDE_STRIP_W, COG_H = 26, 20
+-- The list fills the panel. Everything else lives in a strip down the right, the way
+-- the quest log keeps its own scroll bar: the settings cog at the top of it, the
+-- scroll bar running beneath.
+-- The strip has to be wider than it looks: the questlog-frame border art draws past
+-- the container's own edge (Blizzard anchors that frame with a 3px outset), so a
+-- narrow strip puts the bar and the cog underneath the border rather than beside it.
+local SIDE_STRIP_W, COG_H = 40, 20
 
 local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText
 local ready = false -- true once the header and list exist; a half-built tab stays inert
@@ -313,8 +316,8 @@ local function syncHeader()
     -- In the strip, under the cog. Set here rather than once at creation because the
     -- scroll helper anchors the bar to the scroll frame.
     scrollBar:ClearAllPoints()
-    scrollBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -(COG_H + 12))
-    scrollBar:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -6, 8)
+    scrollBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, -(COG_H + 14))
+    scrollBar:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -10, 10)
     emptyText:ClearAllPoints()
     emptyText:SetPoint("TOP", listInset, "TOP", 0, -30)
 end
@@ -569,7 +572,7 @@ local function createHeader()
         pcall(icon.SetAtlas, icon, "questlog-icon-setting")
         hdr.gear:SetScript("OnClick", function(self) QuestPrism.GuideTab.OpenMenu(self) end)
     end
-    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -6)
+    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, -8)
     -- Above the list container, which is created after it.
     hdr.gear:SetFrameLevel(panel:GetFrameLevel() + 10)
     tooltip(hdr.gear, L.GUIDETAB_GEAR_TOOLTIP, "ANCHOR_LEFT")
