@@ -1,0 +1,8 @@
+<Bindings>
+	<Binding name="QUESTPRISM_TOGGLE" header="QUESTPRISM" category="QuestPrism">
+		QuestPrism.Panel.Toggle()
+	</Binding>
+	<Binding name="QUESTPRISM_GUIDEONLY" category="QuestPrism">
+		QuestPrism.Sources.ToggleFollowing()
+	</Binding>
+</Bindings>

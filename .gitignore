@@ -1,0 +1,13 @@
+# Release zips built locally
+/dist/
+*.zip
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Python virtualenv used by the dev test harness (never inside the addon)
+.dev-tests/__pycache__/

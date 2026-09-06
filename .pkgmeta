@@ -1,0 +1,20 @@
+package-as: QuestPrism
+
+# Files that must not ship in the release zip (development only).
+ignore:
+    - .dev-tests
+    - .gitignore
+    - .pkgmeta
+    - README.md
+    - CHANGELOG.md
+    - docs
+    - dist
+
+# Libraries are committed in-tree (permissive licenses: LibStub, CallbackHandler-1.0,
+# LibDataBroker-1.1, LibDBIcon-1.0). No externals to fetch.
+
+manual-changelog:
+    filename: CHANGELOG.md
+    markup-type: markdown
+
+enable-nolib-creation: no

@@ -1,0 +1,36 @@
+## Interface: 120100
+## Title: QuestPrism
+## Notes: A clear view of your quests: filter the map, minimap and objective tracker by quest type, or follow only your guide
+## Author: Nuruodo
+## Version: 1.0.0-beta3
+## SavedVariablesPerCharacter: QuestPrismCharDB
+## SavedVariables: QuestPrismDB
+## OptionalDeps: ZygorGuidesViewer, RXPGuides, BtWQuests
+## X-License: MIT
+## X-Curse-Project-ID: 1683615
+## X-Category: Quests & Leveling
+## Category: Quests & Leveling
+## IconTexture: Interface\AddOns\QuestPrism\Textures\icon
+
+libs\LibStub.lua
+libs\embeds.xml
+
+Locales\enUS.lua
+QuestPrism.lua
+Core/Settings.lua
+Core/Filter.lua
+Core/Sources.lua
+Core/Rules.lua
+Sources/Zygor.lua
+Sources/RXP.lua
+Sources/BtWQuests.lua
+Hooks/WorldMap.lua
+Hooks/Minimap.lua
+Hooks/ObjectiveTracker.lua
+Hooks/WorldQuests.lua
+UI/WorldMapButton.xml
+UI/MinimapButton.lua
+UI/Panel.lua
+UI/QuickMenu.lua
+UI/GuideTab.lua
+UI/Options.lua
