@@ -24,7 +24,6 @@ local LOOKAHEAD_MIN, LOOKAHEAD_MAX = 1, 10
 
 local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText
 local ready = false -- true once the header and list exist; a half-built tab stays inert
-local scopeButtons = {}
 local hdr = {} -- header widgets: followCb, followLabel, gear, sourceLabel, sourceDropdown, minus, plus, count
 local rowPool, headerPool = {}, {}
 local activeRows, activeHeaders = {}, {}
@@ -295,52 +294,17 @@ local function layoutHeader(text, width, y, sectionKey)
     return HEADER_H + 4
 end
 
--- Header state: follow checkbox, source row (shown only with a choice), scope
--- buttons (active one pressed, all greyed when not following), stepper, status.
--- Positions depend on whether the source row is shown, so the list is re-anchored.
+-- One control row, then the container fills everything below it, the way the quest
+-- log puts its search box above its list. Source, scope and the lookahead count all
+-- live in the gear's menu instead of taking rows of their own.
+local TOP_ROW_H = 34
+
 local function syncHeader()
     if not ready then return end
-    local following = QuestPrism.Sources.IsFollowing()
-    local available = QuestPrism.Sources.AvailableNames()
-    local scope = QuestPrism.Settings.Get("guideScope") or "lookahead"
-    local lookahead = tonumber(QuestPrism.Settings.Get("guideLookahead")) or 3
+    hdr.followCb:SetChecked(QuestPrism.Sources.IsFollowing())
 
-    hdr.followCb:SetChecked(following)
-    local y = 34
-    local showSource = following and #available > 1
-    hdr.sourceLabel:SetShown(showSource)
-    hdr.sourceDropdown:SetShown(showSource)
-    if showSource then
-        hdr.sourceDropdown:QLRefresh()
-        y = y + 28
-    end
-    local x = 6
-    for _, key in ipairs({ "step", "lookahead", "guide" }) do
-        local button = scopeButtons[key]
-        button:ClearAllPoints()
-        button:SetPoint("TOPLEFT", panel, "TOPLEFT", x, -y)
-        if key == "lookahead" then button:SetText(string.format(L.GUIDETAB_SCOPE_NEXT, lookahead)) end
-        -- The active scope's button is "pressed" (disabled): readable at a glance.
-        button:SetEnabled(following and key ~= scope)
-        x = x + numberOr(button:GetWidth(), 50) + 4
-    end
-    hdr.minus:ClearAllPoints(); hdr.minus:SetPoint("TOPLEFT", panel, "TOPLEFT", x + 6, -y)
-    hdr.count:SetText(tostring(lookahead))
-    local stepperOn = following and scope == "lookahead"
-    hdr.minus:SetEnabled(stepperOn and lookahead > LOOKAHEAD_MIN)
-    hdr.plus:SetEnabled(stepperOn and lookahead < LOOKAHEAD_MAX)
-    y = y + 34 -- the scope buttons are 28 tall
-
-    header:ClearAllPoints()
-    header:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -y)
-    header:SetPoint("RIGHT", panel, "RIGHT", -10, 0)
-    header:SetText(QuestPrism.Sources.GetStatusText())
-    y = y + numberOr(header:GetStringHeight(), 12) + 8
-
-    -- The container stops short of the panel's right edge; the divider line and the
-    -- scroll bar live in the gap beyond it.
     listInset:ClearAllPoints()
-    listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", 2, -(y - 2))
+    listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", 2, -TOP_ROW_H)
     listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -28, 4)
     scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 6, -6)
@@ -356,6 +320,11 @@ local function render()
     local list = QuestPrism.Sources.GetActiveQuestList and QuestPrism.Sources.GetActiveQuestList() or nil
     local width = math.max(50, numberOr(scroll:GetWidth(), 280))
     content:SetWidth(width)
+    -- The guide's state reads as the first line of the list rather than as chrome.
+    header:ClearAllPoints()
+    header:SetPoint("TOPLEFT", content, "TOPLEFT", 6, -2)
+    header:SetWidth(width - 12)
+    header:SetText(QuestPrism.Sources.GetStatusText())
 
     if not list then
         emptyText:SetText(L.GUIDETAB_NO_SOURCE)
@@ -365,7 +334,7 @@ local function render()
     end
 
     local entries = QuestPrism.GuideTab.BuildEntries(list)
-    local y = 4
+    local y = numberOr(header:GetStringHeight(), 12) + 8
     local function section(key, text, list)
         if #list == 0 then return end
         y = y + layoutHeader(text, width, y, key)
@@ -465,15 +434,6 @@ local function setScope(scope)
     guideChanged()
 end
 
-local function stepLookahead(delta)
-    local value = (tonumber(QuestPrism.Settings.Get("guideLookahead")) or 3) + delta
-    value = math.max(LOOKAHEAD_MIN, math.min(LOOKAHEAD_MAX, value))
-    if value ~= tonumber(QuestPrism.Settings.Get("guideLookahead")) then
-        QuestPrism.Settings.Set("guideLookahead", value)
-        guideChanged()
-    end
-end
-
 local function tooltip(region, text, anchor)
     region:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, anchor or "ANCHOR_TOP")
@@ -483,6 +443,13 @@ local function tooltip(region, text, anchor)
     region:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
+-- The three scopes, in menu order.
+local SCOPE_OPTIONS = {
+    { key = "step",      label = L.GUIDE_SCOPE_STEP },
+    { key = "lookahead", label = L.GUIDE_SCOPE_LOOKAHEAD },
+    { key = "guide",     label = L.GUIDE_SCOPE_GUIDE },
+}
+
 local function sourceOptions()
     local options = {}
     for _, name in ipairs(QuestPrism.Sources.AvailableNames()) do
@@ -491,10 +458,62 @@ local function sourceOptions()
     return options
 end
 
+-- The gear carries everything that used to sit in rows above the list: which guide,
+-- how much of it, and the way into the full settings window.
+local function buildGuideMenu(_, rootDescription)
+    local function scopeSelected(key) return (QuestPrism.Settings.Get("guideScope") or "lookahead") == key end
+    local function setScopeFromMenu(key) setScope(key) end
+
+    rootDescription:CreateTitle(L.SECTION_GUIDE)
+
+    local available = QuestPrism.Sources.AvailableNames()
+    if #available > 1 then
+        local sourceMenu = rootDescription:CreateButton(L.GUIDE_SOURCE_LABEL)
+        if sourceMenu and type(sourceMenu.CreateRadio) == "function" then
+            for _, option in ipairs(sourceOptions()) do
+                sourceMenu:CreateRadio(option.label, function(key)
+                    return QuestPrism.Settings.Get("guideSource") == key
+                end, function(key)
+                    QuestPrism.Settings.Set("guideSource", key)
+                    QuestPrism.Settings.Set("guideLastSource", key)
+                    guideChanged()
+                end, option.key)
+            end
+        end
+    end
+
+    for _, option in ipairs(SCOPE_OPTIONS) do
+        rootDescription:CreateRadio(option.label, scopeSelected, setScopeFromMenu, option.key)
+    end
+
+    local countMenu = rootDescription:CreateButton(L.GUIDE_LOOKAHEAD_LABEL)
+    if countMenu and type(countMenu.CreateRadio) == "function" then
+        for n = LOOKAHEAD_MIN, LOOKAHEAD_MAX do
+            countMenu:CreateRadio(tostring(n), function(value)
+                return (tonumber(QuestPrism.Settings.Get("guideLookahead")) or 3) == value
+            end, function(value)
+                QuestPrism.Settings.Set("guideLookahead", value)
+                guideChanged()
+            end, n)
+        end
+    end
+
+    rootDescription:CreateDivider()
+    rootDescription:CreateButton(L.GUIDETAB_OPEN_SETTINGS, function() QuestPrism.Panel.Toggle(true) end)
+end
+
+function QuestPrism.GuideTab.OpenMenu(owner)
+    if MenuUtil and MenuUtil.CreateContextMenu then
+        MenuUtil.CreateContextMenu(owner or hdr.gear, buildGuideMenu)
+    else
+        QuestPrism.Panel.Toggle(true)
+    end
+end
+
 local function createHeader()
-    -- Row 1: [x] Follow my guide .......... [gear]
+    -- [x] Follow my guide .......... [gear]
     hdr.followCb = CreateFrame("CheckButton", nil, panel, "MinimalCheckboxTemplate")
-    hdr.followCb:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -4)
+    hdr.followCb:SetPoint("TOPLEFT", panel, "TOPLEFT", 6, -6)
     hdr.followCb:SetScript("OnClick", function(self)
         if not QuestPrism.Sources.SetFollowing(self:GetChecked() and true or false) then
             self:SetChecked(false)
@@ -508,63 +527,11 @@ local function createHeader()
 
     hdr.gear = CreateFrame("Button", nil, panel)
     hdr.gear:SetSize(20, 20)
-    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -8)
-    hdr.gear:SetNormalTexture("Interface\\Buttons\\UI-OptionsButton")
-    hdr.gear:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-    hdr.gear:SetScript("OnClick", function() QuestPrism.Panel.Toggle(true) end)
-    tooltip(hdr.gear, L.GUIDETAB_SETTINGS_TOOLTIP, "ANCHOR_LEFT")
-
-    -- Row 2 (optional): Source [dropdown]
-    hdr.sourceLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hdr.sourceLabel:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -40)
-    hdr.sourceLabel:SetText(L.GUIDETAB_SOURCE)
-    local dd = CreateFrame("DropdownButton", nil, panel, "WowStyle1DropdownTemplate")
-    dd:SetPoint("TOPLEFT", panel, "TOPLEFT", 60, -34)
-    dd:SetWidth(170)
-    local function isSelected(key) return QuestPrism.Settings.Get("guideSource") == key end
-    local function onSelect(key)
-        QuestPrism.Settings.Set("guideSource", key)
-        QuestPrism.Settings.Set("guideLastSource", key)
-        guideChanged()
-    end
-    if type(dd.SetupMenu) == "function" then
-        dd:SetupMenu(function(_, rootDescription)
-            for _, option in ipairs(sourceOptions()) do
-                rootDescription:CreateRadio(option.label, isSelected, onSelect, option.key)
-            end
-        end)
-    end
-    dd.QLRefresh = function(self)
-        local text = QuestPrism.Sources.GetLabel(QuestPrism.Settings.Get("guideSource") or "Off")
-        self.QLText = text
-        if type(self.SetDefaultText) == "function" then self:SetDefaultText(text) end
-        if type(self.GenerateMenu) == "function" then pcall(self.GenerateMenu, self) end
-        if type(self.OverrideText) == "function" then pcall(self.OverrideText, self, text) end
-    end
-    tooltip(dd, L.TOOLTIP_GUIDE_SOURCE, "ANCHOR_RIGHT")
-    hdr.sourceDropdown = dd
-
-    -- Row 3: [Step] [Next N] [Guide]  [-] N [+]
-    local defs = {
-        { key = "step",      text = L.GUIDETAB_SCOPE_STEP,  width = 48 },
-        { key = "lookahead", text = string.format(L.GUIDETAB_SCOPE_NEXT, 3), width = 60 },
-        { key = "guide",     text = L.GUIDETAB_SCOPE_GUIDE, width = 50 },
-    }
-    for _, def in ipairs(defs) do
-        local btn = QuestPrism.Widgets.Button(panel, def.text, def.width, function() setScope(def.key) end)
-        tooltip(btn, L.TOOLTIP_GUIDE_SCOPE)
-        scopeButtons[def.key] = btn
-    end
-    -- 26 wide, not square: the three-slice caps need room either side of the glyph.
-    hdr.minus = QuestPrism.Widgets.Button(panel, "-", 26, function() stepLookahead(-1) end)
-    tooltip(hdr.minus, L.TOOLTIP_GUIDE_LOOKAHEAD)
-    hdr.count = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    hdr.count:SetPoint("LEFT", hdr.minus, "RIGHT", 0, 0)
-    hdr.count:SetWidth(24)
-    hdr.count:SetJustifyH("CENTER")
-    hdr.plus = QuestPrism.Widgets.Button(panel, "+", 26, function() stepLookahead(1) end)
-    hdr.plus:SetPoint("LEFT", hdr.count, "RIGHT", 0, 0)
-    tooltip(hdr.plus, L.TOOLTIP_GUIDE_LOOKAHEAD)
+    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, -8)
+    hdr.gear:SetNormalTexture("Interface\Buttons\UI-OptionsButton")
+    hdr.gear:SetHighlightTexture("Interface\Buttons\UI-Common-MouseHilight", "ADD")
+    hdr.gear:SetScript("OnClick", function(self) QuestPrism.GuideTab.OpenMenu(self) end)
+    tooltip(hdr.gear, L.GUIDETAB_GEAR_TOOLTIP, "ANCHOR_LEFT")
 end
 
 local function createUI()
@@ -681,7 +648,6 @@ end
 QuestPrism.GuideTab.IsCreated = function() return ready end
 QuestPrism.GuideTab.GetTab = function() return tab end
 QuestPrism.GuideTab.GetPanel = function() return panel end
-QuestPrism.GuideTab.GetScopeButtons = function() return scopeButtons end
 QuestPrism.GuideTab.GetHeaderWidgets = function() return hdr end
 QuestPrism.GuideTab.GetActiveHeaders = function() return activeHeaders end
 QuestPrism.GuideTab.GetActiveRows = function() return activeRows end

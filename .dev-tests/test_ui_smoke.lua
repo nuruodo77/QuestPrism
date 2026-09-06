@@ -155,13 +155,16 @@ end)
 local menu = {}
 MenuUtil = {
     CreateContextMenu = function(owner, generator)
-        menu = { owner = owner, checkboxes = {}, buttons = {}, subs = {}, dividers = 0, titles = 0 }
+        menu = { owner = owner, checkboxes = {}, buttons = {}, subs = {}, radios = {}, dividers = 0, titles = 0 }
         local root = {
             CreateTitle = function(_, text) menu.titles = menu.titles + 1 end,
             CreateCheckbox = function(_, text, isSelected, setSelected, data)
                 table.insert(menu.checkboxes, { text = text, isSelected = isSelected, setSelected = setSelected, data = data })
             end,
             CreateDivider = function() menu.dividers = menu.dividers + 1 end,
+            CreateRadio = function(_, text, isSelected, setSelected, data)
+                table.insert(menu.radios, { text = text, isSelected = isSelected, setSelected = setSelected, data = data })
+            end,
             CreateButton = function(_, text, fn)
                 local sub = { text = text, fn = fn, checkboxes = {}, radios = {}, dividers = 0 }
                 sub.CreateCheckbox = function(_, t, isSelected, setSelected, data)
@@ -478,21 +481,33 @@ test("Sources.SetFollowing picks the last or first available source and reports 
     ZGV = nil
 end)
 
-test("GuideTab header has three scope buttons that set the scope, and right-click toggles tracking", function()
-    local buttons = QuestPrism.GuideTab.GetScopeButtons()
-    assertTrue(buttons.step and buttons.lookahead and buttons.guide, "three scope buttons")
+test("the gear menu carries scope and the lookahead count, and right-click toggles tracking", function()
+    local orig = QuestPrism.WorldMap.Refresh; QuestPrism.WorldMap.Refresh = function() end
     QuestPrism.Settings.Set("guideScope", "lookahead")
-    buttons.guide:GetScript("OnClick")(buttons.guide)
-    assertEq(QuestPrism.Settings.Get("guideScope"), "guide")
-    buttons.step:GetScript("OnClick")(buttons.step)
-    assertEq(QuestPrism.Settings.Get("guideScope"), "step")
-    QuestPrism.Settings.Set("guideScope", "lookahead")
+    QuestPrism.GuideTab.OpenMenu("gear")
+    assertEq(#menu.radios, 3, "three scope choices at the top level")
+    local guideRadio
+    for _, r in ipairs(menu.radios) do if r.data == "guide" then guideRadio = r end end
+    assertTrue(guideRadio ~= nil, "whole guide offered")
+    assertEq(guideRadio.isSelected(guideRadio.data), false)
+    guideRadio.setSelected(guideRadio.data)
+    assertEq(QuestPrism.Settings.Get("guideScope"), "guide", "menu sets the scope")
+    assertEq(guideRadio.isSelected(guideRadio.data), true)
+
+    local counts = menu.subs[QuestPrism_L.GUIDE_LOOKAHEAD_LABEL]
+    assertTrue(counts ~= nil, "lookahead submenu"); assertEq(#counts.radios, 10, "1 through 10")
+    counts.radios[7].setSelected(counts.radios[7].data)
+    assertEq(QuestPrism.Settings.Get("guideLookahead"), 7)
+    assertEq(counts.radios[7].isSelected(counts.radios[7].data), true)
+    QuestPrism.Settings.Set("guideLookahead", 3); QuestPrism.Settings.Set("guideScope", "lookahead")
+
     local watched = {}
     C_QuestLog.GetQuestWatchType = function(id) return watched[id] end
     C_QuestLog.AddQuestWatch = function(id) watched[id] = 1 end
     C_QuestLog.RemoveQuestWatch = function(id) watched[id] = nil end
     QuestPrism.GuideTab.ToggleWatch(900); assertEq(watched[900], 1, "tracked")
     QuestPrism.GuideTab.ToggleWatch(900); assertEq(watched[900], nil, "untracked")
+    QuestPrism.WorldMap.Refresh = orig
 end)
 
 
@@ -523,57 +538,47 @@ end)
 
 
 -- Map tab header: the guide's home
-test("GuideTab header: follow checkbox toggles following and greys the scope controls", function()
+test("the map tab header is one row: the follow checkbox and the gear", function()
     local orig = QuestPrism.WorldMap.Refresh; QuestPrism.WorldMap.Refresh = function() end
     local h = QuestPrism.GuideTab.GetHeaderWidgets()
     assertTrue(h.followCb ~= nil and h.followCb.template == "MinimalCheckboxTemplate", "follow checkbox")
-    assertTrue(h.sourceDropdown ~= nil and h.sourceDropdown.template == "WowStyle1DropdownTemplate", "source dropdown")
+    assertTrue(h.gear ~= nil, "gear")
+    assertEq(h.sourceDropdown, nil, "no source row taking space any more")
+    assertEq(h.minus, nil, "no stepper row either")
     ZGV = { CurrentStepNum = 1, CurrentGuide = { title = "h", steps = { { goals = {} } } }, AddMessageHandler = function() end }
     QuestPrism.Settings.Set("guideSource", "Off"); QuestPrism.GuideTab.Sync()
     assertEq(h.followCb:GetChecked(), false)
-    local buttons = QuestPrism.GuideTab.GetScopeButtons()
-    assertFalse(buttons.step:IsEnabled(), "scope greyed while not following")
-    assertFalse(h.plus:IsEnabled(), "stepper greyed while not following")
     h.followCb:SetChecked(true); h.followCb:GetScript("OnClick")(h.followCb)
     assertTrue(QuestPrism.Sources.IsFollowing(), "following after the tick")
-    assertFalse(h.sourceDropdown:IsShown(), "one source available: no source row")
-    QuestPrism.Settings.Set("guideScope", "lookahead"); QuestPrism.GuideTab.Sync()
-    assertTrue(buttons.step:IsEnabled()); assertFalse(buttons.lookahead:IsEnabled(), "active scope pressed")
-    assertTrue(h.plus:IsEnabled(), "stepper live in lookahead scope")
     h.followCb:SetChecked(false); h.followCb:GetScript("OnClick")(h.followCb)
     assertFalse(QuestPrism.Sources.IsFollowing())
     ZGV = nil; QuestPrism.WorldMap.Refresh = orig
 end)
 
-test("GuideTab stepper changes the lookahead within 1..10", function()
-    local orig = QuestPrism.WorldMap.Refresh; QuestPrism.WorldMap.Refresh = function() end
-    ZGV = { CurrentStepNum = 1, CurrentGuide = { title = "s", steps = { { goals = {} } } }, AddMessageHandler = function() end }
-    QuestPrism.Sources.SetFollowing(true); QuestPrism.Settings.Set("guideScope", "lookahead")
-    QuestPrism.Settings.Set("guideLookahead", 9); QuestPrism.GuideTab.Sync()
-    local h = QuestPrism.GuideTab.GetHeaderWidgets()
-    h.plus:GetScript("OnClick")(h.plus); assertEq(QuestPrism.Settings.Get("guideLookahead"), 10)
-    assertFalse(h.plus:IsEnabled(), "at the top")
-    h.plus:GetScript("OnClick")(h.plus); assertEq(QuestPrism.Settings.Get("guideLookahead"), 10, "clamped")
-    assertEq(h.count.text, "10")
-    QuestPrism.Settings.Set("guideLookahead", 2); QuestPrism.GuideTab.Sync()
-    h.minus:GetScript("OnClick")(h.minus); assertEq(QuestPrism.Settings.Get("guideLookahead"), 1)
-    assertFalse(h.minus:IsEnabled(), "at the bottom")
-    h.minus:GetScript("OnClick")(h.minus); assertEq(QuestPrism.Settings.Get("guideLookahead"), 1, "clamped")
-    QuestPrism.Settings.Set("guideLookahead", 3); QuestPrism.Sources.SetFollowing(false)
-    ZGV = nil; QuestPrism.WorldMap.Refresh = orig
+test("the gear opens the settings window when the menu system is missing", function()
+    local savedMenuUtil = MenuUtil
+    MenuUtil = nil
+    local opened = false
+    local savedToggle = QuestPrism.Panel.Toggle
+    QuestPrism.Panel.Toggle = function() opened = true end
+    QuestPrism.GuideTab.OpenMenu("gear")
+    assertTrue(opened, "falls back to the window")
+    QuestPrism.Panel.Toggle = savedToggle
+    MenuUtil = savedMenuUtil
 end)
 
-test("GuideTab shows the source row only when more than one guide addon is available", function()
+test("the gear menu offers a source only when more than one guide addon is available", function()
     local orig = QuestPrism.WorldMap.Refresh; QuestPrism.WorldMap.Refresh = function() end
     ZGV = { CurrentStepNum = 1, CurrentGuide = { title = "z", steps = { { goals = {} } } }, AddMessageHandler = function() end }
+    RXPFrame = nil; RXPCData = nil
+    QuestPrism.GuideTab.OpenMenu("gear")
+    assertEq(menu.subs[QuestPrism_L.GUIDE_SOURCE_LABEL], nil, "one source: no source entry")
     RXPFrame = { activeSteps = { { index = 1, elements = {} } }, BottomFrame = { UpdateFrame = function() end } }
     RXPCData = { currentStep = 1 }
-    QuestPrism.Sources.SetFollowing(true); QuestPrism.GuideTab.Sync()
-    local h = QuestPrism.GuideTab.GetHeaderWidgets()
-    assertTrue(h.sourceDropdown:IsShown(), "two sources: source row shown")
-    assertEq(h.sourceDropdown.QLText, QuestPrism.Sources.GetLabel(QuestPrism.Settings.Get("guideSource")))
-    QuestPrism.Sources.SetFollowing(false); QuestPrism.GuideTab.Sync()
-    assertFalse(h.sourceDropdown:IsShown(), "hidden when not following")
+    QuestPrism.GuideTab.OpenMenu("gear")
+    local sources = menu.subs[QuestPrism_L.GUIDE_SOURCE_LABEL]
+    assertTrue(sources ~= nil, "two sources: a source entry appears")
+    assertEq(#sources.radios, 2)
     ZGV = nil; RXPFrame = nil; RXPCData = nil; QuestPrism.WorldMap.Refresh = orig
 end)
 
@@ -707,18 +712,8 @@ test("buttons fall back to the legacy template on a client without the modern on
 end)
 
 
-test("the map tab uses the same button art as the window", function()
-    local before = #MOCK.createdFrames
-    QuestPrism.GuideTab.Sync()
-    local buttons = QuestPrism.GuideTab.GetScopeButtons()
-    local template = QuestPrism.Widgets.ButtonTemplate()
-    assertEq(template, "SharedButtonSmallTemplate")
-    for key, btn in pairs(buttons) do
-        assertEq(btn.template, template, key .. " uses the shared template")
-    end
-    local h = QuestPrism.GuideTab.GetHeaderWidgets()
-    assertEq(h.minus.template, template, "stepper minus")
-    assertEq(h.plus.template, template, "stepper plus")
+test("the window's buttons come from the shared factory", function()
+    assertEq(QuestPrism.Widgets.ButtonTemplate(), "SharedButtonSmallTemplate")
 end)
 
 

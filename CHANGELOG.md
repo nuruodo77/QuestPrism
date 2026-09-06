@@ -62,6 +62,10 @@ they live. Your saved filters and presets carry over.
   The list sits in the quest log's own bordered container, with the scroll bar outside
   it on the side and the same divider line the quest log draws, so the tab reads as
   part of the quest log rather than a panel dropped into it.
+- The tab is now one view. Its header is a single row, the Follow my guide tick and a
+  gear, and the list fills everything below it. Source, scope and how many steps count
+  moved into the gear's menu instead of taking three rows above the list, and the
+  guide's status reads as the first line of the list.
 
 **Elsewhere**
 
