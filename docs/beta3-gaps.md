@@ -6,21 +6,19 @@ what it is waiting on.
 
 ## Needs the game (cannot be checked from the repo)
 
-- [ ] **World Quests row icon.** `worldquest-questmarker-questbang` in `UI/Panel.lua` is
-  the only atlas added this session and is unverified; no other installed addon uses it.
-  If the row shows no icon, that is the cause. The other eight atlases shipped in beta1
-  and beta2, so they are verified by use.
+- [x] **World Quests row icon.** Verified in game: the row draws its marker. The Event
+  row's horn icon, taken from the Map Legend, verified the same way.
 - [x] **Expedition name.** Resolved from Blizzard's own Map Legend source: the pins the
   addon filed under "Expedition" are the legend's **Event** entry (`MAP_LEGEND_EVENT`,
   "Limited Time Activities"). The row now takes its name, description and horn icon from
   that entry at runtime, in the client's language. The saved key stays `Expedition`.
-- [ ] **One-column window.** 460 x 800 beside the map. Check that the Map Legend
-  descriptions wrap the way the mock predicted and that the scroll bar is not permanently
-  needed.
-- [ ] **Two-column window.** 872 x 560 standalone. Check the left column clears the
-  scroll bar and the window fits at your UI scale.
-- [ ] **Control smoke test.** Radios, the preset dropdown and its menu, the Save as box,
-  the map tab stepper, and Escape closing the window.
+- [x] **One-column window.** Seen in game beside the map; descriptions wrap cleanly and
+  every row is readable.
+- [ ] **Two-column window.** 872 x 560 standalone. Not yet looked at in game; open it
+  from the minimap button or `/questprism` and check the left column clears the bar.
+- [x] **Control smoke test.** The map tab, its menu, headers, bar and heading were
+  worked through in game during the beta3 session; the window's radios and preset
+  dropdown were seen working. Escape closing the window was not separately reported.
 
 ## Closable from here
 
@@ -67,6 +65,8 @@ Everything below the in-game checks is ready; the package is reproducible with
 - [x] **Store description.** `docs/curseforge-description.md` matches the beta3 UI.
 - [x] **Package.** 30 files, ~195 KB, one `QuestPrism/` folder, no dev files, every TOC
   entry present.
-- [ ] **Upload.** After the in-game checks pass: rebuild the zip if anything changed,
-  tag the commit, and upload to CurseForge project 1683615 as a beta file, pasting the
-  beta3 changelog section as the release notes.
+- [x] **Upload.** Done 2026-09-06 by pushing tag `v1.0.0-beta3`: the release workflow
+  packaged it, uploaded it to CurseForge project 1683615 as a beta file for 12.1.0, and
+  cut a GitHub prerelease with the zip attached. Tags follow the existing `v` prefix.
+  The two older tags on this machine point at the pre-reset history and must never be
+  pushed; push tags by name, never `--tags`.
