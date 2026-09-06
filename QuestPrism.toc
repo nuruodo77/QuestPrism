@@ -30,6 +30,7 @@ Hooks/ObjectiveTracker.lua
 Hooks/WorldQuests.lua
 UI/WorldMapButton.xml
 UI/MinimapButton.lua
+UI/Widgets.lua
 UI/Panel.lua
 UI/QuickMenu.lua
 UI/GuideTab.lua

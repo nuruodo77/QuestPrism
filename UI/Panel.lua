@@ -5,7 +5,7 @@ QuestPrism.Panel = {}
 --   * checkboxes: MinimalCheckboxTemplate (the Options menu ones)
 --   * radios    : UIRadioButtonTemplate (two-way choices)
 --   * dropdown  : WowStyle1DropdownTemplate + MenuUtil (presets)
---   * buttons   : UIPanelButtonTemplate; text entry: InputBoxTemplate
+--   * buttons   : SharedButtonSmallTemplate via UI/Widgets.lua; entry: InputBoxTemplate
 --   * scrolling : ScrollFrame + MinimalScrollBar
 -- One rule for every row: ticked means visible. Content, top to bottom:
 --   preset row (dropdown, Save as), Filters (this character / all characters),
@@ -49,7 +49,7 @@ local CONTENT_W = COLUMN_W
 local ICON_X, LABEL_X = 8, 32
 local CONTROL_RIGHT = CONTENT_W - 8 -- right edge of the control column
 local NAME_H, DESC_H = 14, 12      -- fallbacks when the mock cannot measure text
-local SECTION_HEADER_H = 26
+local SECTION_HEADER_H = 34 -- fits a 28px header button plus the rule beneath it
 local SECTION_GAP = 10
 
 local frame, scrollFrame, scrollBar, content, statusText
@@ -103,30 +103,8 @@ local function checkbox(parent, tooltip)
     return cb
 end
 
--- Buttons use the modern three-slice atlas art (SharedButtonExtraSmallTemplate,
--- natural height 20) rather than the legacy UI-Panel-Button textures. The template
--- is probed once: a client without it falls back to the old one instead of failing
--- the whole window build.
-local buttonTemplate, buttonHeight
-
-local function resolveButtonTemplate()
-    if buttonTemplate then return end
-    -- ThreeSliceButtonMixin is declared by the same file as those templates, so its
-    -- absence means a client that only has the legacy panel button.
-    if type(ThreeSliceButtonMixin) == "table" then
-        buttonTemplate, buttonHeight = "SharedButtonExtraSmallTemplate", 20
-    else
-        buttonTemplate, buttonHeight = "UIPanelButtonTemplate", 22
-    end
-end
-
 local function button(parent, text, width, onClick, tooltip)
-    resolveButtonTemplate()
-    local btn = CreateFrame("Button", nil, parent, buttonTemplate)
-    -- Height stays at the art's own, so the three slices never scale.
-    btn:SetSize(width, buttonHeight)
-    btn:SetText(text)
-    btn:SetScript("OnClick", onClick)
+    local btn = QuestPrism.Widgets.Button(parent, text, width, onClick)
     attachTooltip(btn, tooltip)
     return btn
 end
@@ -162,13 +140,13 @@ end
 -- [-] N [+] within min..max; Sync(enabled) greys both buttons at the ends.
 local function stepperControl(parent, minValue, maxValue, getValue, setValue, tooltip)
     local holder = CreateFrame("Frame", nil, parent)
-    holder:SetSize(88, 22)
-    -- 24 wide, not square: the three-slice caps need room either side of the glyph.
-    local minus = button(holder, "-", 24, function() setValue(math.max(minValue, getValue() - 1)) end, tooltip)
+    holder:SetSize(92, 28)
+    -- 26 wide, not square: the three-slice caps need room either side of the glyph.
+    local minus = button(holder, "-", 26, function() setValue(math.max(minValue, getValue() - 1)) end, tooltip)
     minus:SetPoint("LEFT", holder, "LEFT", 0, 0)
     local text = fontString(holder, "GameFontHighlight", "", 28, "CENTER")
     text:SetPoint("LEFT", minus, "RIGHT", 4, 0)
-    local plus = button(holder, "+", 24, function() setValue(math.min(maxValue, getValue() + 1)) end, tooltip)
+    local plus = button(holder, "+", 26, function() setValue(math.min(maxValue, getValue() + 1)) end, tooltip)
     plus:SetPoint("LEFT", text, "RIGHT", 4, 0)
     holder.Sync = function(self, enabled)
         local value = getValue()
@@ -448,7 +426,7 @@ end
 local function buildTopRows(section)
     local body = section.body
     -- Row 1: Preset [dropdown] [Save as...]
-    local presetRow = addRow(section, { name = L.PRESET_ROW_LABEL, controlWidth = 0, minHeight = 30 })
+    local presetRow = addRow(section, { name = L.PRESET_ROW_LABEL, controlWidth = 0, minHeight = 38 })
     local dd = CreateFrame("DropdownButton", nil, presetRow.frame, "WowStyle1DropdownTemplate")
     dd:SetPoint("TOPLEFT", presetRow.frame, "TOPLEFT", 64, 0)
     dd:SetWidth(176)
@@ -643,7 +621,7 @@ local function buildGuideSection()
         function() return tonumber(QuestPrism.Settings.Get("guideLookahead")) or 3 end,
         function(value) QuestPrism.Settings.Set("guideLookahead", value); changed() end,
         L.TOOLTIP_GUIDE_LOOKAHEAD)
-    widgets.lookaheadRow = addRow(section, { name = L.GUIDE_LOOKAHEAD_LABEL, control = widgets.lookaheadStepper, controlWidth = 90 })
+    widgets.lookaheadRow = addRow(section, { name = L.GUIDE_LOOKAHEAD_LABEL, control = widgets.lookaheadStepper, controlWidth = 96, minHeight = 36 })
 end
 
 local function buildAddonSection()

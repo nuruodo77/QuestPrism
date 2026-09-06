@@ -58,8 +58,9 @@ they live. Your saved filters and presets carry over.
 - The world map and minimap button tooltips show how many pins are hidden, while the map
   is open. `/questprism help` lists the commands.
 - The first-run "What's new" popup is gone.
-- The window's buttons use the game's modern three-slice button art instead of the
-  legacy panel-button textures. A client without that template keeps the old one.
+- Every button in the addon, in the window and on the map tab, uses the game's modern
+  three-slice button art instead of the legacy panel-button textures. A client without
+  that template keeps the old one.
 
 ## 1.0.0-beta2
 

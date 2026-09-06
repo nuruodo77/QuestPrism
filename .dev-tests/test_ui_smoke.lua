@@ -319,6 +319,7 @@ test("GuideTab creates its tab and panel and switches modes with Blizzard's mech
     end
     QuestMapFrame_OpenToQuestDetails = function(id) modeEvents.opened = id end
 
+    LOAD_ADDON_FILE("UI/Widgets.lua")
     LOAD_ADDON_FILE("UI/GuideTab.lua")
     QuestPrism.GuideTab.Initialize()
     assertTrue(QuestPrism.GuideTab.IsCreated(), "panel created: " .. tostring(QuestPrism.GuideTab.lastError))
@@ -364,6 +365,7 @@ test("Panel.lua (native) loads, builds the window, syncs, and toggles", function
     MinimalSliderWithSteppersMixin = { Label = { Right = 2 }, Event = { OnValueChanged = "OnValueChanged" } }
     ScrollUtil = { InitScrollFrameWithScrollBar = function() end }
     WorldMapFrame = WorldMapFrame or MOCK.newFrame()
+    LOAD_ADDON_FILE("UI/Widgets.lua")
     local before = #MOCK.createdFrames
     LOAD_ADDON_FILE("UI/Panel.lua")
     QuestPrism.Panel.Initialize()
@@ -381,7 +383,7 @@ test("Panel.lua (native) loads, builds the window, syncs, and toggles", function
     assertEq(templates["WowStyle1DropdownTemplate"], 3, "presets + the optional source and scope")
     assertEq(templates["MinimalSliderWithSteppersTemplate"], nil, "no slider in the window any more")
     assertTrue(templates["MinimalScrollBar"] == 1, "native scroll bar")
-    assertEq(templates["SharedButtonExtraSmallTemplate"], 6, "modern three-slice buttons: Save as, All, None, Show on map, stepper -/+")
+    assertEq(templates["SharedButtonSmallTemplate"], 6, "modern three-slice buttons: Save as, All, None, Show on map, stepper -/+")
     assertEq(templates["UIPanelButtonTemplate"], nil, "no legacy panel buttons left in the window")
     assertTrue(templates["InputBoxTemplate"] == 1, "inline preset name box")
     QuestPrism.Panel.Sync()
@@ -678,6 +680,8 @@ test("buttons fall back to the legacy template on a client without the modern on
     local saved = ThreeSliceButtonMixin
     ThreeSliceButtonMixin = nil
     QuestPrism.Panel = {}
+    -- Reloading Widgets clears its memo, so the template is decided afresh.
+    LOAD_ADDON_FILE("UI/Widgets.lua")
     local before = #MOCK.createdFrames
     LOAD_ADDON_FILE("UI/Panel.lua")
     QuestPrism.Panel.Initialize()
@@ -688,6 +692,22 @@ test("buttons fall back to the legacy template on a client without the modern on
         if f.template then templates[f.template] = (templates[f.template] or 0) + 1 end
     end
     assertEq(templates["UIPanelButtonTemplate"], 6, "legacy buttons used instead")
-    assertEq(templates["SharedButtonExtraSmallTemplate"], nil, "none of the modern ones")
+    assertEq(templates["SharedButtonSmallTemplate"], nil, "none of the modern ones")
     ThreeSliceButtonMixin = saved
+    LOAD_ADDON_FILE("UI/Widgets.lua") -- back to the modern template for later tests
+end)
+
+
+test("the map tab uses the same button art as the window", function()
+    local before = #MOCK.createdFrames
+    QuestPrism.GuideTab.Sync()
+    local buttons = QuestPrism.GuideTab.GetScopeButtons()
+    local template = QuestPrism.Widgets.ButtonTemplate()
+    assertEq(template, "SharedButtonSmallTemplate")
+    for key, btn in pairs(buttons) do
+        assertEq(btn.template, template, key .. " uses the shared template")
+    end
+    local h = QuestPrism.GuideTab.GetHeaderWidgets()
+    assertEq(h.minus.template, template, "stepper minus")
+    assertEq(h.plus.template, template, "stepper plus")
 end)

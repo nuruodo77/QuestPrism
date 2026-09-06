@@ -275,7 +275,7 @@ local function syncHeader()
     local stepperOn = following and scope == "lookahead"
     hdr.minus:SetEnabled(stepperOn and lookahead > LOOKAHEAD_MIN)
     hdr.plus:SetEnabled(stepperOn and lookahead < LOOKAHEAD_MAX)
-    y = y + 26
+    y = y + 34 -- the scope buttons are 28 tall
 
     header:ClearAllPoints()
     header:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -y)
@@ -489,32 +489,24 @@ local function createHeader()
 
     -- Row 3: [Step] [Next N] [Guide]  [-] N [+]
     local defs = {
-        { key = "step",      text = L.GUIDETAB_SCOPE_STEP,  width = 46 },
+        { key = "step",      text = L.GUIDETAB_SCOPE_STEP,  width = 48 },
         { key = "lookahead", text = string.format(L.GUIDETAB_SCOPE_NEXT, 3), width = 60 },
         { key = "guide",     text = L.GUIDETAB_SCOPE_GUIDE, width = 50 },
     }
     for _, def in ipairs(defs) do
-        local btn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-        btn:SetSize(def.width, 20)
-        btn:SetText(def.text)
-        btn:SetScript("OnClick", function() setScope(def.key) end)
+        local btn = QuestPrism.Widgets.Button(panel, def.text, def.width, function() setScope(def.key) end)
         tooltip(btn, L.TOOLTIP_GUIDE_SCOPE)
         scopeButtons[def.key] = btn
     end
-    hdr.minus = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    hdr.minus:SetSize(20, 20)
-    hdr.minus:SetText("-")
-    hdr.minus:SetScript("OnClick", function() stepLookahead(-1) end)
+    -- 26 wide, not square: the three-slice caps need room either side of the glyph.
+    hdr.minus = QuestPrism.Widgets.Button(panel, "-", 26, function() stepLookahead(-1) end)
     tooltip(hdr.minus, L.TOOLTIP_GUIDE_LOOKAHEAD)
     hdr.count = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     hdr.count:SetPoint("LEFT", hdr.minus, "RIGHT", 0, 0)
     hdr.count:SetWidth(24)
     hdr.count:SetJustifyH("CENTER")
-    hdr.plus = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    hdr.plus:SetSize(20, 20)
+    hdr.plus = QuestPrism.Widgets.Button(panel, "+", 26, function() stepLookahead(1) end)
     hdr.plus:SetPoint("LEFT", hdr.count, "RIGHT", 0, 0)
-    hdr.plus:SetText("+")
-    hdr.plus:SetScript("OnClick", function() stepLookahead(1) end)
     tooltip(hdr.plus, L.TOOLTIP_GUIDE_LOOKAHEAD)
 end
 

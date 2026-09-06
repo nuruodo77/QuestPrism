@@ -11,6 +11,7 @@ local requested = {}
 C_QuestLog.RequestLoadQuestByID = function(id) requested[id] = true end
 C_QuestLog.GetQuestClassification = function(id) return Enum.QuestClassification.Normal end
 
+LOAD_ADDON_FILE("UI/Widgets.lua")
 LOAD_ADDON_FILE("UI/GuideTab.lua")
 
 test("BuildEntries splits guide quests into in-log, to-pick-up, and completed, keeping guide order", function()
