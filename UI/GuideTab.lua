@@ -31,17 +31,20 @@ local renderPending = false
 -- Data (pure, tested)
 -- ---------------------------------------------------------------------------
 
+-- Row icon for a quest known only by its ID. Goes through the filter's own lookup
+-- (C_QuestInfoSystem, with the older-client fallbacks) so the tab and the map always
+-- classify a quest the same way.
 local function questTypeAtlas(questID)
-    if not (C_QuestLog and C_QuestLog.GetQuestClassification) then return nil end
-    local ok, classification = pcall(C_QuestLog.GetQuestClassification, questID)
-    if not ok or classification == nil then return nil end
-    local questType = QuestPrism.Filter.GetTypeFromClassification(classification)
+    if not (QuestPrism.Filter and QuestPrism.Filter.GetQuestType) then return nil end
+    local ok, questType = pcall(QuestPrism.Filter.GetQuestType, questID)
+    if not ok or not questType then return nil end
     local types = QuestPrism.Panel and QuestPrism.Panel.QUEST_TYPES or {}
     for _, info in ipairs(types) do
         if info.key == questType then return info.atlas end
     end
     return nil
 end
+QuestPrism.GuideTab.GetQuestTypeAtlas = function(questID) return questTypeAtlas(questID) end
 
 function QuestPrism.GuideTab.BuildEntries(list)
     local result = { inLog = {}, toPickUp = {}, completed = 0 }

@@ -49,6 +49,12 @@ they live. Your saved filters and presets carry over.
 - "None", "Hide all" and solo now cover the World Quests row, so All and None are
   symmetric.
 
+**Fixes**
+
+- The QuestPrism map tab never drew its quest type icons: it asked a namespace that
+  does not exist. It now uses the same classification lookup as the map filter, so a
+  quest gets the same icon in both places.
+
 **Elsewhere**
 
 - Quick menu: Follow my guide, a Quest types submenu that now includes World Quests, a

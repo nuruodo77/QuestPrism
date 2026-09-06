@@ -58,3 +58,26 @@ test("Sources.GetActiveQuestList keeps guide order and step numbers; set is deri
     assertTrue(set[5] and set[3] and set[9] and not set[1])
     QuestPrism.Settings.Set("guideSource", "Off"); ZGV = nil
 end)
+
+-- The icon table lives on the window, which the TOC loads first; this test does not
+-- load it, so stand it up with the three entries the assertions below need.
+QuestPrism.Panel = QuestPrism.Panel or {}
+QuestPrism.Panel.QUEST_TYPES = {
+    { key = "Campaign",   atlas = "questlog-questtypeicon-story" },
+    { key = "Repeatable", atlas = "questlog-questtypeicon-recurring" },
+    { key = "LocalStory", atlas = "questnormal" },
+}
+
+test("row icons resolve through the filter's classification, not a missing API", function()
+    -- The tab used to call C_QuestLog.GetQuestClassification, which does not exist,
+    -- so every row hid its icon. It now shares Core/Filter's lookup.
+    assertTrue(QuestPrism.Filter.GetQuestType ~= nil, "filter exposes the lookup")
+    MOCK.campaign = { [910] = 5 }
+    assertEq(QuestPrism.Filter.GetQuestType(910), "Campaign")
+    assertEq(QuestPrism.GuideTab.GetQuestTypeAtlas(910), "questlog-questtypeicon-story", "campaign icon")
+    MOCK.campaign = {}
+    MOCK.repeatable = { [911] = true }
+    assertEq(QuestPrism.GuideTab.GetQuestTypeAtlas(911), "questlog-questtypeicon-recurring", "repeatable icon")
+    MOCK.repeatable = {}
+    assertEq(QuestPrism.GuideTab.GetQuestTypeAtlas(912), "questnormal", "plain quest falls back to Local Story")
+end)

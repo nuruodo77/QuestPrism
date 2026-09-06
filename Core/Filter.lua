@@ -169,6 +169,9 @@ local function typeFromQuestID(questID)
 end
 
 -- Filter type of a pin, or nil when the pin is not something QuestPrism filters.
+-- Same lookup for callers that only have a quest ID (the map tab's row icons).
+Filter.GetQuestType = typeFromQuestID
+
 function Filter.GetPinType(pin)
     if not pin then return nil end
 
