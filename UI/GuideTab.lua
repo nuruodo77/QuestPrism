@@ -21,13 +21,11 @@ local MODE = "QuestPrism"
 local ICON = "Interface\\AddOns\\QuestPrism\\Textures\\icon"
 local RENDER_DELAY = 0.1
 local LOOKAHEAD_MIN, LOOKAHEAD_MAX = 1, 10
--- The list fills the panel. Everything else lives in a strip down the right, the way
--- the quest log keeps its own scroll bar: the settings cog at the top of it, the
--- scroll bar running beneath.
--- The strip has to be wider than it looks: the questlog-frame border art draws past
--- the container's own edge (Blizzard anchors that frame with a 3px outset), so a
--- narrow strip puts the bar and the cog underneath the border rather than beside it.
-local SIDE_STRIP_W, COG_H = 40, 20
+-- The list fills the panel, edge to edge. The settings cog and the scroll bar sit
+-- OUTSIDE the panel, in the gap between it and the side tabs: that is where the quest
+-- log keeps its own bar (8px past its list's right edge), and ours takes its place
+-- while theirs is faded. Children may extend past a parent that does not clip.
+local BAR_GAP, COG_H = 8, 20
 
 local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText
 local ready = false -- true once the header and list exist; a half-built tab stays inert
@@ -306,18 +304,18 @@ end
 -- live in the settings button's menu instead of taking rows of their own.
 local function syncHeader()
     if not ready then return end
-    -- The container takes the whole panel apart from the strip on the right.
+    -- The container takes the whole panel.
     listInset:ClearAllPoints()
     listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", 2, -2)
-    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -SIDE_STRIP_W, 4)
+    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -2, 4)
     scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 6, -6)
     scroll:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -6, 6)
-    -- In the strip, under the cog. Set here rather than once at creation because the
-    -- scroll helper anchors the bar to the scroll frame.
+    -- Past the panel's right edge, under the cog. Set here rather than once at
+    -- creation because the scroll helper anchors the bar to the scroll frame.
     scrollBar:ClearAllPoints()
-    scrollBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, -(COG_H + 14))
-    scrollBar:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -10, 10)
+    scrollBar:SetPoint("TOPLEFT", panel, "TOPRIGHT", BAR_GAP, -(COG_H + 12))
+    scrollBar:SetPoint("BOTTOMLEFT", panel, "BOTTOMRIGHT", BAR_GAP, 6)
     emptyText:ClearAllPoints()
     emptyText:SetPoint("TOP", listInset, "TOP", 0, -30)
 end
@@ -572,7 +570,8 @@ local function createHeader()
         pcall(icon.SetAtlas, icon, "questlog-icon-setting")
         hdr.gear:SetScript("OnClick", function(self) QuestPrism.GuideTab.OpenMenu(self) end)
     end
-    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, -8)
+    -- Centred over the bar, which is 8 wide starting BAR_GAP past the edge; the cog is 15.
+    hdr.gear:SetPoint("TOPLEFT", panel, "TOPRIGHT", BAR_GAP - 4, -4)
     -- Above the list container, which is created after it.
     hdr.gear:SetFrameLevel(panel:GetFrameLevel() + 10)
     tooltip(hdr.gear, L.GUIDETAB_GEAR_TOOLTIP, "ANCHOR_LEFT")
