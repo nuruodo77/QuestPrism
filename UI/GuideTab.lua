@@ -118,8 +118,8 @@ local function numberOr(value, default)
     return default
 end
 
--- Section headers are the game's list-header plate: a three-slice bar with a
--- collapse arrow, the same art the quest log's own category headers use.
+-- Section headers are the quest log's own category header: its plate atlas
+-- stretched over the row, with its plus / minus on the right.
 local HEADER_H = 22
 
 local function toggleSection(header)
@@ -133,18 +133,13 @@ local function acquireHeader()
     if not header then
         header = CreateFrame("Button", nil, content)
         header:SetHeight(HEADER_H)
-        header.Left = header:CreateTexture(nil, "BACKGROUND")
-        header.Left:SetPoint("TOPLEFT")
-        header.Left:SetPoint("BOTTOMLEFT")
-        pcall(header.Left.SetAtlas, header.Left, "Options_ListExpand_Left", true)
-        header.Right = header:CreateTexture(nil, "BACKGROUND")
-        header.Right:SetPoint("TOPRIGHT")
-        header.Right:SetPoint("BOTTOMRIGHT")
-        pcall(header.Right.SetAtlas, header.Right, "Options_ListExpand_Right", true)
-        header.Middle = header:CreateTexture(nil, "BACKGROUND")
-        header.Middle:SetPoint("TOPLEFT", header.Left, "TOPRIGHT")
-        header.Middle:SetPoint("BOTTOMRIGHT", header.Right, "BOTTOMLEFT")
-        pcall(header.Middle.SetAtlas, header.Middle, "_Options_ListExpand_Middle")
+        -- The plate is the quest log header's own art: ListHeaderVisualTemplate sets
+        -- common-button-list-collapseExpand as the button's normal texture, stretched
+        -- to the header. (The three-slice Options_ListExpand set is the older accordion
+        -- from the options panel.)
+        header.Plate = header:CreateTexture(nil, "BACKGROUND")
+        header.Plate:SetAllPoints()
+        pcall(header.Plate.SetAtlas, header.Plate, "common-button-list-collapseExpand")
         -- The plus / minus the quest log's own headers use, on the right as theirs is;
         -- the atlas is chosen per state in layoutHeader.
         header.Expander = header:CreateTexture(nil, "ARTWORK")
@@ -153,9 +148,12 @@ local function acquireHeader()
         header.Text:SetPoint("LEFT", header, "LEFT", 10, 0)
         header.Text:SetPoint("RIGHT", header.Expander, "LEFT", -4, 0)
         header.Text:SetJustifyH("LEFT")
+        -- Same highlight as theirs: the plate art again, additive, at 40%.
         local highlight = header:CreateTexture(nil, "HIGHLIGHT")
         highlight:SetAllPoints()
-        highlight:SetColorTexture(1, 1, 1, 0.07)
+        pcall(highlight.SetAtlas, highlight, "common-button-list-collapseExpand")
+        highlight:SetBlendMode("ADD")
+        highlight:SetAlpha(0.4)
         header:SetScript("OnClick", toggleSection)
     end
     header:Show()

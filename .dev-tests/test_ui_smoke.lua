@@ -827,6 +827,7 @@ test("section headers show the quest log's plus when collapsed and minus when op
     QuestPrism.GuideTab.OnDisplayModeChanged(QuestPrism.GuideTab.MODE); MOCK.flushTimers()
     local h = QuestPrism.GuideTab.GetActiveHeaders()[1]
     assertTrue(h ~= nil, "a section header rendered")
+    assertEq(h.Plate.atlas, "common-button-list-collapseExpand", "the quest log's own header plate")
     assertEq(h.Expander.atlas, "common-button-list-minus", "open: minus")
     h:GetScript("OnClick")(h); MOCK.flushTimers()
     h = QuestPrism.GuideTab.GetActiveHeaders()[1]
