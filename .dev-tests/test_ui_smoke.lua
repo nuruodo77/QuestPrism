@@ -381,7 +381,8 @@ test("Panel.lua (native) loads, builds the window, syncs, and toggles", function
     assertEq(templates["WowStyle1DropdownTemplate"], 3, "presets + the optional source and scope")
     assertEq(templates["MinimalSliderWithSteppersTemplate"], nil, "no slider in the window any more")
     assertTrue(templates["MinimalScrollBar"] == 1, "native scroll bar")
-    assertEq(templates["UIPanelButtonTemplate"], 6, "Save as, All, None, Show on map, stepper -/+")
+    assertEq(templates["SharedButtonExtraSmallTemplate"], 6, "modern three-slice buttons: Save as, All, None, Show on map, stepper -/+")
+    assertEq(templates["UIPanelButtonTemplate"], nil, "no legacy panel buttons left in the window")
     assertTrue(templates["InputBoxTemplate"] == 1, "inline preset name box")
     QuestPrism.Panel.Sync()
     QuestPrism.Panel.Toggle(); assertTrue(QuestPrism.Panel.IsShown(), "shown after toggle")
@@ -669,4 +670,24 @@ test("the waypoint option is off by default and writes the setting", function()
     w.waypointCb:SetChecked(false); w.waypointCb:GetScript("OnClick")(w.waypointCb)
     assertEq(QuestPrism.Settings.Get("clearWorldQuestWaypoint"), false)
     QuestPrism.WorldMap.Refresh = orig
+end)
+
+
+test("buttons fall back to the legacy template on a client without the modern one", function()
+    -- Same window code, on a client where the three-slice family is absent.
+    local saved = ThreeSliceButtonMixin
+    ThreeSliceButtonMixin = nil
+    QuestPrism.Panel = {}
+    local before = #MOCK.createdFrames
+    LOAD_ADDON_FILE("UI/Panel.lua")
+    QuestPrism.Panel.Initialize()
+    assertTrue(QuestPrism.Panel.lastError == nil, "window still builds: " .. tostring(QuestPrism.Panel.lastError))
+    local templates = {}
+    for i = before + 1, #MOCK.createdFrames do
+        local f = MOCK.createdFrames[i]
+        if f.template then templates[f.template] = (templates[f.template] or 0) + 1 end
+    end
+    assertEq(templates["UIPanelButtonTemplate"], 6, "legacy buttons used instead")
+    assertEq(templates["SharedButtonExtraSmallTemplate"], nil, "none of the modern ones")
+    ThreeSliceButtonMixin = saved
 end)

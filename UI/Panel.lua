@@ -103,9 +103,28 @@ local function checkbox(parent, tooltip)
     return cb
 end
 
+-- Buttons use the modern three-slice atlas art (SharedButtonExtraSmallTemplate,
+-- natural height 20) rather than the legacy UI-Panel-Button textures. The template
+-- is probed once: a client without it falls back to the old one instead of failing
+-- the whole window build.
+local buttonTemplate, buttonHeight
+
+local function resolveButtonTemplate()
+    if buttonTemplate then return end
+    -- ThreeSliceButtonMixin is declared by the same file as those templates, so its
+    -- absence means a client that only has the legacy panel button.
+    if type(ThreeSliceButtonMixin) == "table" then
+        buttonTemplate, buttonHeight = "SharedButtonExtraSmallTemplate", 20
+    else
+        buttonTemplate, buttonHeight = "UIPanelButtonTemplate", 22
+    end
+end
+
 local function button(parent, text, width, onClick, tooltip)
-    local btn = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-    btn:SetSize(width, 22)
+    resolveButtonTemplate()
+    local btn = CreateFrame("Button", nil, parent, buttonTemplate)
+    -- Height stays at the art's own, so the three slices never scale.
+    btn:SetSize(width, buttonHeight)
     btn:SetText(text)
     btn:SetScript("OnClick", onClick)
     attachTooltip(btn, tooltip)
@@ -143,12 +162,13 @@ end
 -- [-] N [+] within min..max; Sync(enabled) greys both buttons at the ends.
 local function stepperControl(parent, minValue, maxValue, getValue, setValue, tooltip)
     local holder = CreateFrame("Frame", nil, parent)
-    holder:SetSize(84, 22)
-    local minus = button(holder, "-", 22, function() setValue(math.max(minValue, getValue() - 1)) end, tooltip)
+    holder:SetSize(88, 22)
+    -- 24 wide, not square: the three-slice caps need room either side of the glyph.
+    local minus = button(holder, "-", 24, function() setValue(math.max(minValue, getValue() - 1)) end, tooltip)
     minus:SetPoint("LEFT", holder, "LEFT", 0, 0)
     local text = fontString(holder, "GameFontHighlight", "", 28, "CENTER")
     text:SetPoint("LEFT", minus, "RIGHT", 4, 0)
-    local plus = button(holder, "+", 22, function() setValue(math.min(maxValue, getValue() + 1)) end, tooltip)
+    local plus = button(holder, "+", 24, function() setValue(math.min(maxValue, getValue() + 1)) end, tooltip)
     plus:SetPoint("LEFT", text, "RIGHT", 4, 0)
     holder.Sync = function(self, enabled)
         local value = getValue()

@@ -187,6 +187,9 @@ C_SuperTrack = {
     SetSuperTrackedQuestID = function(id) M.superTracked = id or 0 end,
 }
 
+-- Modern three-slice button family (SharedButton*Template) is present on retail.
+ThreeSliceButtonMixin = {}
+
 QuestPinMixin = { OnAcquired = function() end }
 QuestDataProviderMixin = { RefreshAllData = function() end }
 
