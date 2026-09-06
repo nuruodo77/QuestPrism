@@ -9,8 +9,9 @@ QuestPrism.GuideTab = {}
 -- Header: "Follow my guide" checkbox + gear (settings window), Source dropdown
 -- (only when more than one guide addon is available), scope buttons
 -- (Step / Next N / Guide) with a stepper for N, and the status line.
--- Buttons come from UI/Widgets.lua and the list uses the modern thin scroll bar,
--- so the tab matches the settings window and the quest log it sits beside.
+-- Buttons come from UI/Widgets.lua; the list sits in a bordered inset with the
+-- modern thin scroll bar and collapsible plate headers, so the tab matches the
+-- settings window and the quest log it sits beside.
 -- Click a log quest: Blizzard's details. Right-click: track / untrack.
 -- Tab switching goes through Blizzard's display mode (SetDisplayMode) with a mode
 -- of our own; the tab is parented to a holder frame (the template has parentArray).
@@ -21,7 +22,7 @@ local ICON = "Interface\\AddOns\\QuestPrism\\Textures\\icon"
 local RENDER_DELAY = 0.1
 local LOOKAHEAD_MIN, LOOKAHEAD_MAX = 1, 10
 
-local holder, tab, panel, header, scroll, scrollBar, content, emptyText
+local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText
 local ready = false -- true once the header and list exist; a half-built tab stays inert
 local scopeButtons = {}
 local hdr = {} -- header widgets: followCb, followLabel, gear, sourceLabel, sourceDropdown, minus, plus, count
@@ -109,15 +110,49 @@ local function numberOr(value, default)
     return default
 end
 
+-- Section headers are the game's list-header plate: a three-slice bar with a
+-- collapse arrow, the same art the quest log's own category headers use.
+local HEADER_H = 22
+
+local function toggleSection(header)
+    if not header.sectionKey then return end
+    QuestPrism.Settings.Set(header.sectionKey, not (QuestPrism.Settings.Get(header.sectionKey) == true))
+    QuestPrism.GuideTab.Refresh()
+end
+
 local function acquireHeader()
-    local fs = table.remove(headerPool)
-    if not fs then
-        fs = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        fs:SetJustifyH("LEFT")
+    local header = table.remove(headerPool)
+    if not header then
+        header = CreateFrame("Button", nil, content)
+        header:SetHeight(HEADER_H)
+        header.Left = header:CreateTexture(nil, "BACKGROUND")
+        header.Left:SetPoint("TOPLEFT")
+        header.Left:SetPoint("BOTTOMLEFT")
+        pcall(header.Left.SetAtlas, header.Left, "Options_ListExpand_Left", true)
+        header.Right = header:CreateTexture(nil, "BACKGROUND")
+        header.Right:SetPoint("TOPRIGHT")
+        header.Right:SetPoint("BOTTOMRIGHT")
+        pcall(header.Right.SetAtlas, header.Right, "Options_ListExpand_Right", true)
+        header.Middle = header:CreateTexture(nil, "BACKGROUND")
+        header.Middle:SetPoint("TOPLEFT", header.Left, "TOPRIGHT")
+        header.Middle:SetPoint("BOTTOMRIGHT", header.Right, "BOTTOMLEFT")
+        pcall(header.Middle.SetAtlas, header.Middle, "_Options_ListExpand_Middle")
+        header.Expander = header:CreateTexture(nil, "ARTWORK")
+        header.Expander:SetSize(16, 16)
+        header.Expander:SetPoint("LEFT", header, "LEFT", 6, 0)
+        pcall(header.Expander.SetAtlas, header.Expander, "common-button-list-collapseExpand")
+        header.Text = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        header.Text:SetPoint("LEFT", header.Expander, "RIGHT", 4, 0)
+        header.Text:SetPoint("RIGHT", header, "RIGHT", -6, 0)
+        header.Text:SetJustifyH("LEFT")
+        local highlight = header:CreateTexture(nil, "HIGHLIGHT")
+        highlight:SetAllPoints()
+        highlight:SetColorTexture(1, 1, 1, 0.07)
+        header:SetScript("OnClick", toggleSection)
     end
-    fs:Show()
-    table.insert(activeHeaders, fs)
-    return fs
+    header:Show()
+    table.insert(activeHeaders, header)
+    return header
 end
 
 local function onRowClick(row, button)
@@ -187,7 +222,7 @@ end
 
 local function releaseAll()
     for _, row in ipairs(activeRows) do row:Hide(); row.entry = nil; table.insert(rowPool, row) end
-    for _, fs in ipairs(activeHeaders) do fs:Hide(); table.insert(headerPool, fs) end
+    for _, h in ipairs(activeHeaders) do h:Hide(); h.sectionKey = nil; table.insert(headerPool, h) end
     activeRows, activeHeaders = {}, {}
 end
 
@@ -238,12 +273,26 @@ local function layoutRow(row, entry, width, y)
     return height
 end
 
-local function layoutHeader(text, width, y)
-    local fs = acquireHeader()
-    fs:SetPoint("TOPLEFT", content, "TOPLEFT", 6, -y)
-    fs:SetWidth(width - 12)
-    fs:SetText(text)
-    return numberOr(fs:GetStringHeight(), 14) + 8
+-- sectionKey nil means a plain caption (the completed footer): no arrow, no click.
+local function layoutHeader(text, width, y, sectionKey)
+    local header = acquireHeader()
+    header:ClearAllPoints()
+    header:SetPoint("TOPLEFT", content, "TOPLEFT", 2, -y)
+    header:SetWidth(math.max(40, width - 8))
+    header:SetHeight(HEADER_H)
+    header.Text:SetText(text)
+    header.sectionKey = sectionKey
+    header:SetEnabled(sectionKey ~= nil)
+    header.Expander:SetShown(sectionKey ~= nil)
+    if sectionKey then
+        -- One arrow atlas, turned to point down when the section is open.
+        local collapsed = QuestPrism.Settings.Get(sectionKey) == true
+        pcall(header.Expander.SetRotation, header.Expander, collapsed and 0 or -math.pi / 2)
+        header.Text:SetPoint("LEFT", header.Expander, "RIGHT", 4, 0)
+    else
+        header.Text:SetPoint("LEFT", header, "LEFT", 8, 0)
+    end
+    return HEADER_H + 4
 end
 
 -- Header state: follow checkbox, source row (shown only with a choice), scope
@@ -288,11 +337,14 @@ local function syncHeader()
     header:SetText(QuestPrism.Sources.GetStatusText())
     y = y + numberOr(header:GetStringHeight(), 12) + 8
 
+    listInset:ClearAllPoints()
+    listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", 2, -(y - 2))
+    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 4)
     scroll:ClearAllPoints()
-    scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 6, -y)
-    scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -28, 8)
+    scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 4, -4)
+    scroll:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -22, 4)
     emptyText:ClearAllPoints()
-    emptyText:SetPoint("TOP", panel, "TOP", 0, -(y + 30))
+    emptyText:SetPoint("TOP", listInset, "TOP", 0, -30)
 end
 
 local function render()
@@ -312,20 +364,18 @@ local function render()
 
     local entries = QuestPrism.GuideTab.BuildEntries(list)
     local y = 4
-    if #entries.inLog > 0 then
-        y = y + layoutHeader(string.format(L.GUIDETAB_IN_LOG, #entries.inLog), width, y)
-        for _, entry in ipairs(entries.inLog) do
-            y = y + layoutRow(acquireRow(), entry, width, y)
+    local function section(key, text, list)
+        if #list == 0 then return end
+        y = y + layoutHeader(text, width, y, key)
+        if QuestPrism.Settings.Get(key) ~= true then
+            for _, entry in ipairs(list) do
+                y = y + layoutRow(acquireRow(), entry, width, y)
+            end
         end
         y = y + 6
     end
-    if #entries.toPickUp > 0 then
-        y = y + layoutHeader(string.format(L.GUIDETAB_TO_PICK_UP, #entries.toPickUp), width, y)
-        for _, entry in ipairs(entries.toPickUp) do
-            y = y + layoutRow(acquireRow(), entry, width, y)
-        end
-        y = y + 6
-    end
+    section("guideCollapsedInLog", string.format(L.GUIDETAB_IN_LOG, #entries.inLog), entries.inLog)
+    section("guideCollapsedToPickUp", string.format(L.GUIDETAB_TO_PICK_UP, #entries.toPickUp), entries.toPickUp)
     if entries.completed > 0 then
         y = y + layoutHeader("|cff808080" .. string.format(L.GUIDETAB_COMPLETED, entries.completed) .. "|r", width, y)
     end
@@ -554,6 +604,10 @@ local function createUI()
     header:SetJustifyH("LEFT")
     header:SetWordWrap(true)
 
+    -- The list sits in a bordered inset, like Blizzard's own quest list, rather than
+    -- floating on the panel background.
+    listInset = CreateFrame("Frame", nil, panel, "InsetFrameTemplate")
+
     -- Plain scroll frame plus the modern thin scroll bar, the same pairing the
     -- settings window uses, instead of UIPanelScrollFrameTemplate's chunky legacy bar.
     scroll = CreateFrame("ScrollFrame", nil, panel)
@@ -617,4 +671,7 @@ QuestPrism.GuideTab.GetTab = function() return tab end
 QuestPrism.GuideTab.GetPanel = function() return panel end
 QuestPrism.GuideTab.GetScopeButtons = function() return scopeButtons end
 QuestPrism.GuideTab.GetHeaderWidgets = function() return hdr end
+QuestPrism.GuideTab.GetActiveHeaders = function() return activeHeaders end
+QuestPrism.GuideTab.GetActiveRows = function() return activeRows end
+QuestPrism.GuideTab.GetListInset = function() return listInset end
 QuestPrism.GuideTab.MODE = MODE

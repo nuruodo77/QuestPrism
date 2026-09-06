@@ -57,6 +57,9 @@ they live. Your saved filters and presets carry over.
 - The map tab's quest list used the legacy scroll frame, with the old chunky scroll
   bar beside the quest log's modern one. It now uses the same thin bar as the settings
   window.
+- The map tab's sections were bare text on a flat background. They are now the game's
+  own list-header plates, which collapse when clicked and remember that per character,
+  and the list sits in a bordered inset like Blizzard's quest list beside it.
 
 **Elsewhere**
 

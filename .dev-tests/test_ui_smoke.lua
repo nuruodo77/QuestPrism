@@ -720,3 +720,36 @@ test("the map tab uses the same button art as the window", function()
     assertEq(h.minus.template, template, "stepper minus")
     assertEq(h.plus.template, template, "stepper plus")
 end)
+
+
+test("the guide list has plate headers in a bordered inset, and they collapse", function()
+    local orig = QuestPrism.WorldMap.Refresh; QuestPrism.WorldMap.Refresh = function() end
+    ZGV = { CurrentStepNum = 1, CurrentGuide = { title = "c", steps = { { goals = { { questid = 501 }, { questid = 502 } } } } }, AddMessageHandler = function() end }
+    QuestPrism.Settings.Set("guideSource", "Zygor"); QuestPrism.Settings.Set("guideScope", "step")
+    QuestPrism.Settings.Set("guideCollapsedToPickUp", false)
+    QuestPrism.Sources.Invalidate()
+    C_QuestLog.GetLogIndexForQuestID = function() return nil end
+    C_QuestLog.IsQuestFlaggedCompleted = function() return false end
+    C_QuestLog.GetTitleForQuestID = function(id) return "Quest " .. id end
+    QuestPrism.GuideTab.Select(); MOCK.flushTimers()
+
+    assertTrue(QuestPrism.GuideTab.GetListInset() ~= nil, "inset created")
+    assertEq(QuestPrism.GuideTab.GetListInset().template, "InsetFrameTemplate")
+    local headers = QuestPrism.GuideTab.GetActiveHeaders()
+    assertEq(#headers, 1, "one section: to pick up")
+    assertEq(headers[1].sectionKey, "guideCollapsedToPickUp")
+    assertEq(#QuestPrism.GuideTab.GetActiveRows(), 2, "both quests listed")
+
+    headers[1]:GetScript("OnClick")(headers[1])
+    assertEq(QuestPrism.Settings.Get("guideCollapsedToPickUp"), true, "clicking collapses")
+    MOCK.flushTimers()
+    assertEq(#QuestPrism.GuideTab.GetActiveRows(), 0, "rows hidden while collapsed")
+    assertEq(#QuestPrism.GuideTab.GetActiveHeaders(), 1, "header stays so it can be reopened")
+
+    headers = QuestPrism.GuideTab.GetActiveHeaders()
+    headers[1]:GetScript("OnClick")(headers[1])
+    MOCK.flushTimers()
+    assertEq(#QuestPrism.GuideTab.GetActiveRows(), 2, "reopened")
+    QuestPrism.Settings.Set("guideSource", "Off"); ZGV = nil
+    QuestPrism.WorldMap.Refresh = orig
+end)
