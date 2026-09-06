@@ -26,6 +26,10 @@ local LOOKAHEAD_MIN, LOOKAHEAD_MAX = 1, 10
 -- log keeps its own bar (8px past its list's right edge), and ours takes its place
 -- while theirs is faded. Children may extend past a parent that does not clip.
 local BAR_GAP, COG_H = 8, 20
+-- The panel stops this far short of the content anchor's right edge; the cog and
+-- the bar live in that gap. Their top is tied to the content anchor, not the panel,
+-- so the heading band above the panel does not push them down.
+local PANEL_RIGHT_INSET = 22
 
 local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText, titleHolder, titleText
 local ready = false -- true once the header and list exist; a half-built tab stays inert
@@ -316,7 +320,7 @@ local function syncHeader()
     -- Past the panel's right edge, under the cog. Set here rather than once at
     -- creation because the scroll helper anchors the bar to the scroll frame.
     scrollBar:ClearAllPoints()
-    scrollBar:SetPoint("TOPLEFT", panel, "TOPRIGHT", BAR_GAP, -(COG_H + 12))
+    scrollBar:SetPoint("TOPLEFT", QuestMapFrame.ContentsAnchor, "TOPRIGHT", BAR_GAP - PANEL_RIGHT_INSET, -(COG_H + 12))
     scrollBar:SetPoint("BOTTOMLEFT", panel, "BOTTOMRIGHT", BAR_GAP, 6)
     emptyText:ClearAllPoints()
     emptyText:SetPoint("TOP", listInset, "TOP", 0, -30)
@@ -573,7 +577,7 @@ local function createHeader()
         hdr.gear:SetScript("OnClick", function(self) QuestPrism.GuideTab.OpenMenu(self) end)
     end
     -- Centred over the bar, which is 8 wide starting BAR_GAP past the edge; the cog is 15.
-    hdr.gear:SetPoint("TOPLEFT", panel, "TOPRIGHT", BAR_GAP - 4, -4)
+    hdr.gear:SetPoint("TOPLEFT", QuestMapFrame.ContentsAnchor, "TOPRIGHT", BAR_GAP - 4 - PANEL_RIGHT_INSET, -4)
     -- Above the list container, which is created after it.
     hdr.gear:SetFrameLevel(panel:GetFrameLevel() + 10)
     tooltip(hdr.gear, L.GUIDETAB_GEAR_TOOLTIP, "ANCHOR_LEFT")
@@ -609,7 +613,7 @@ local function createUI()
     -- anchored: that band is where a tab's heading lives. Starting at 0, as the quest
     -- list does, put our heading up inside the quest log's header chrome.
     panel:SetPoint("TOPLEFT", QuestMapFrame.ContentsAnchor, "TOPLEFT", 0, -29)
-    panel:SetPoint("BOTTOMRIGHT", QuestMapFrame.ContentsAnchor, "BOTTOMRIGHT", -22, 0)
+    panel:SetPoint("BOTTOMRIGHT", QuestMapFrame.ContentsAnchor, "BOTTOMRIGHT", -PANEL_RIGHT_INSET, 0)
     panel:Hide()
     local bg = panel:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
