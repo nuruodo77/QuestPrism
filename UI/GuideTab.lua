@@ -27,7 +27,7 @@ local LOOKAHEAD_MIN, LOOKAHEAD_MAX = 1, 10
 -- while theirs is faded. Children may extend past a parent that does not clip.
 local BAR_GAP, COG_H = 8, 20
 
-local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText, titleText
+local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText, titleHolder, titleText
 local ready = false -- true once the header and list exist; a half-built tab stays inert
 local hdr = {} -- gear: the settings cog in the right-hand strip
 local rowPool, headerPool = {}, {}
@@ -633,11 +633,18 @@ local function createUI()
 
     -- The tab's heading, built the way the Map Legend and Events tabs build theirs:
     -- the same font, sitting just above the bordered container, 1 left and 3 up.
+    -- It draws above the panel's own area, where the quest log's chrome sits at a
+    -- higher level than our panel, so it lives on a small frame raised above that.
     local titleFont = (type(_G.Game15Font_Shadow) == "table") and "Game15Font_Shadow" or "GameFontNormalLarge"
-    titleText = panel:CreateFontString(nil, "ARTWORK", titleFont)
+    titleHolder = CreateFrame("Frame", nil, panel)
+    titleHolder:SetSize(1, 1)
+    titleHolder:SetPoint("BOTTOM", listInset, "TOP", -1, 3)
+    titleHolder:SetFrameLevel(panel:GetFrameLevel() + 30)
+    titleText = titleHolder:CreateFontString(nil, "OVERLAY", titleFont)
     titleText:SetWordWrap(false)
     titleText:SetText(L.GUIDETAB_TITLE)
-    titleText:SetPoint("BOTTOM", listInset, "TOP", -1, 3)
+    titleText:SetPoint("BOTTOM", titleHolder, "BOTTOM", 0, 0)
+    titleText.fontName = titleFont
 
     -- Plain scroll frame plus the modern thin scroll bar, the same pairing the
     -- settings window uses, instead of UIPanelScrollFrameTemplate's chunky legacy bar.
@@ -731,6 +738,9 @@ local function report()
     print("  scroll     " .. describe(scroll))
     print("  ourBar     " .. describe(scrollBar))
     print("  cog        " .. describe(hdr.gear))
+    print("  title      " .. describe(titleText) .. " font=" .. tostring(titleText and titleText.fontName)
+        .. " level=" .. tostring(titleHolder and titleHolder.GetFrameLevel and titleHolder:GetFrameLevel())
+        .. " panelLevel=" .. tostring(panel and panel.GetFrameLevel and panel:GetFrameLevel()))
     -- Blizzard's own list and bar: if one of these is still shown, that is what is
     -- being seen on the right, and it is not ours to move.
     local theirs = _G.QuestScrollFrame
