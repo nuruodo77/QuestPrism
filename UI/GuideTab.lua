@@ -6,9 +6,9 @@ QuestPrism.GuideTab = {}
 --   * "In your log" : accepted, with objectives and turn-in state
 --   * "To pick up"  : not accepted yet (titles loaded on demand)
 --   * list footer   : number already completed
--- Header: "Follow my guide" checkbox + gear (settings window), Source dropdown
--- (only when more than one guide addon is available), scope buttons
--- (Step / Next N / Guide) with a stepper for N, and the status line.
+-- The list fills the tab. A settings cog sits at the top of the strip down the
+-- right, with the scroll bar beneath it; the cog's menu carries following, source,
+-- scope, how many steps count, and the way into the settings window.
 -- Buttons come from UI/Widgets.lua; the list sits in a bordered inset with the
 -- modern thin scroll bar and collapsible plate headers, so the tab matches the
 -- settings window and the quest log it sits beside.
@@ -21,11 +21,14 @@ local MODE = "QuestPrism"
 local ICON = "Interface\\AddOns\\QuestPrism\\Textures\\icon"
 local RENDER_DELAY = 0.1
 local LOOKAHEAD_MIN, LOOKAHEAD_MAX = 1, 10
-local TOP_ROW_H = 34 -- the follow tick and the settings button live in this strip
+-- The list fills the panel. Everything else lives in a narrow strip down the right,
+-- the way the quest log keeps its own scroll bar: the settings cog at the top of it,
+-- the scroll bar running beneath.
+local SIDE_STRIP_W, COG_H = 26, 20
 
 local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText
 local ready = false -- true once the header and list exist; a half-built tab stays inert
-local hdr = {} -- header widgets: followCb, followLabel, gear, sourceLabel, sourceDropdown, minus, plus, count
+local hdr = {} -- gear: the settings cog in the right-hand strip
 local rowPool, headerPool = {}, {}
 local activeRows, activeHeaders = {}, {}
 local renderPending = false
@@ -300,18 +303,17 @@ end
 -- live in the settings button's menu instead of taking rows of their own.
 local function syncHeader()
     if not ready then return end
-    hdr.followCb:SetChecked(QuestPrism.Sources.IsFollowing())
-
+    -- The container takes the whole panel apart from the strip on the right.
     listInset:ClearAllPoints()
-    listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", 2, -TOP_ROW_H)
-    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -28, 4)
+    listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", 2, -2)
+    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -SIDE_STRIP_W, 4)
     scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 6, -6)
     scroll:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -6, 6)
-    -- Down the panel's outer edge, past the container, and set here rather than once
-    -- at creation because the scroll helper anchors the bar to the scroll frame.
+    -- In the strip, under the cog. Set here rather than once at creation because the
+    -- scroll helper anchors the bar to the scroll frame.
     scrollBar:ClearAllPoints()
-    scrollBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -(TOP_ROW_H + 4))
+    scrollBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -(COG_H + 12))
     scrollBar:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -6, 8)
     emptyText:ClearAllPoints()
     emptyText:SetPoint("TOP", listInset, "TOP", 0, -30)
@@ -523,20 +525,6 @@ function QuestPrism.GuideTab.OpenMenu(owner)
 end
 
 local function createHeader()
-    -- [x] Follow my guide .......... [gear]
-    hdr.followCb = CreateFrame("CheckButton", nil, panel, "MinimalCheckboxTemplate")
-    hdr.followCb:SetPoint("TOPLEFT", panel, "TOPLEFT", 6, -6)
-    hdr.followCb:SetScript("OnClick", function(self)
-        if not QuestPrism.Sources.SetFollowing(self:GetChecked() and true or false) then
-            self:SetChecked(false)
-        end
-        guideChanged()
-    end)
-    tooltip(hdr.followCb, L.TOOLTIP_FOLLOW_GUIDE, "ANCHOR_RIGHT")
-    hdr.followLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    hdr.followLabel:SetPoint("LEFT", hdr.followCb, "RIGHT", 2, 0)
-    hdr.followLabel:SetText(L.FOLLOW_GUIDE_LABEL)
-
     -- The quest log's own settings cog: a dropdown button carrying the questlog-icon-setting
     -- atlas, so ours looks and behaves like the one above Blizzard's quest list.
     hdr.gear = CreateFrame("DropdownButton", nil, panel, "UIPanelIconDropdownButtonTemplate")
@@ -551,7 +539,7 @@ local function createHeader()
         pcall(icon.SetAtlas, icon, "questlog-icon-setting")
         hdr.gear:SetScript("OnClick", function(self) QuestPrism.GuideTab.OpenMenu(self) end)
     end
-    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -8)
+    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -6)
     -- Above the list container, which is created after it.
     hdr.gear:SetFrameLevel(panel:GetFrameLevel() + 10)
     tooltip(hdr.gear, L.GUIDETAB_GEAR_TOOLTIP, "ANCHOR_LEFT")

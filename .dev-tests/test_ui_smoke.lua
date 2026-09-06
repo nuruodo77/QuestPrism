@@ -540,21 +540,13 @@ end)
 
 
 -- Map tab header: the guide's home
-test("the map tab header is one row: the follow checkbox and the gear", function()
-    local orig = QuestPrism.WorldMap.Refresh; QuestPrism.WorldMap.Refresh = function() end
+test("the map tab has no header row: the cog is the only chrome", function()
     local h = QuestPrism.GuideTab.GetHeaderWidgets()
-    assertTrue(h.followCb ~= nil and h.followCb.template == "MinimalCheckboxTemplate", "follow checkbox")
-    assertTrue(h.gear ~= nil, "gear")
-    assertEq(h.sourceDropdown, nil, "no source row taking space any more")
-    assertEq(h.minus, nil, "no stepper row either")
-    ZGV = { CurrentStepNum = 1, CurrentGuide = { title = "h", steps = { { goals = {} } } }, AddMessageHandler = function() end }
-    QuestPrism.Settings.Set("guideSource", "Off"); QuestPrism.GuideTab.Sync()
-    assertEq(h.followCb:GetChecked(), false)
-    h.followCb:SetChecked(true); h.followCb:GetScript("OnClick")(h.followCb)
-    assertTrue(QuestPrism.Sources.IsFollowing(), "following after the tick")
-    h.followCb:SetChecked(false); h.followCb:GetScript("OnClick")(h.followCb)
-    assertFalse(QuestPrism.Sources.IsFollowing())
-    ZGV = nil; QuestPrism.WorldMap.Refresh = orig
+    assertTrue(h.gear ~= nil, "the settings cog")
+    assertEq(h.followCb, nil, "no follow row taking a row of its own")
+    assertEq(h.followLabel, nil)
+    assertEq(h.sourceDropdown, nil, "no source row")
+    assertEq(h.minus, nil, "no stepper row")
 end)
 
 test("the gear opens the settings window when the menu system is missing", function()
@@ -763,7 +755,6 @@ test("the settings menu toggles following, like the row does", function()
     assertEq(follow.isSelected(), false)
     follow.setSelected()
     assertTrue(QuestPrism.Sources.IsFollowing(), "menu starts following")
-    assertEq(QuestPrism.GuideTab.GetHeaderWidgets().followCb:GetChecked(), true, "the row's tick follows suit")
     follow.setSelected()
     assertFalse(QuestPrism.Sources.IsFollowing())
     ZGV = nil; QuestPrism.WorldMap.Refresh = orig
