@@ -304,10 +304,12 @@ end
 -- live in the settings button's menu instead of taking rows of their own.
 local function syncHeader()
     if not ready then return end
-    -- The container is the whole panel, flush to every edge.
+    -- The container overhangs the panel by the same outset Blizzard gives its own
+    -- border frame around the quest list (3px each side, 7 above, 6 below), so the
+    -- border art lands where theirs does rather than a few pixels inside it.
     listInset:ClearAllPoints()
-    listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
-    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
+    listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", -3, 7)
+    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 3, -6)
     scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 6, -6)
     scroll:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -6, 6)
