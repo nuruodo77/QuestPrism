@@ -304,10 +304,10 @@ end
 -- live in the settings button's menu instead of taking rows of their own.
 local function syncHeader()
     if not ready then return end
-    -- The container takes the whole panel.
+    -- The container is the whole panel, flush to every edge.
     listInset:ClearAllPoints()
-    listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", 2, -2)
-    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -2, 4)
+    listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
+    listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
     scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 6, -6)
     scroll:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -6, 6)
