@@ -9,6 +9,7 @@ ignore:
     - CHANGELOG.md
     - docs
     - dist
+    - .github
 
 # Libraries are committed in-tree (permissive licenses: LibStub, CallbackHandler-1.0,
 # LibDataBroker-1.1, LibDBIcon-1.0). No externals to fetch.

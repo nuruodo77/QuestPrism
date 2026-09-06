@@ -15,7 +15,7 @@ import sys
 import zipfile
 
 # Kept in step with the ignore list in .pkgmeta.
-IGNORE = ['.dev-tests', '.gitignore', '.gitattributes', '.pkgmeta', 'README.md', 'CHANGELOG.md', 'docs', 'dist']
+IGNORE = [".github", '.dev-tests', '.gitignore', '.gitattributes', '.pkgmeta', 'README.md', 'CHANGELOG.md', 'docs', 'dist']
 
 ADDON = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

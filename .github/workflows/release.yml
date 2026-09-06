@@ -1,0 +1,37 @@
+name: Package and release
+
+# Pushing a tag builds the addon and uploads it. The BigWigs packager reads the tag
+# name to decide the file type on CurseForge: a tag containing "alpha" uploads as
+# alpha, one containing "beta" as beta, anything else as a full release. So
+# "1.0.0-beta3" lands as a beta file, and "1.0.0" would land as a release.
+#
+# It builds from .pkgmeta (which files to skip) and the TOC's X-Curse-Project-ID,
+# and takes the release notes from CHANGELOG.md, per the manual-changelog directive.
+#
+# One secret is required: CF_API_KEY, a CurseForge API token from the account that
+# owns project 1683615. Without it the job fails at the upload step.
+
+on:
+  push:
+    tags:
+      - '**'
+
+# The packager also cuts a GitHub release, which needs write access to contents.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v7
+        with:
+          # The packager needs the full history to find the previous tag.
+          fetch-depth: 0
+
+      - name: Package and release
+        uses: BigWigsMods/packager@v2
