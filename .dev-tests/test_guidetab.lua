@@ -81,3 +81,16 @@ test("row icons resolve through the filter's classification, not a missing API",
     MOCK.repeatable = {}
     assertEq(QuestPrism.GuideTab.GetQuestTypeAtlas(912), "questnormal", "plain quest falls back to Local Story")
 end)
+
+test("the settings cog wears the quest log's own atlas when the template is missing", function()
+    -- This harness has no Blizzard templates, so the tab takes its fallback path.
+    local h = QuestPrism.GuideTab.GetHeaderWidgets()
+    if h.gear then
+        local icon
+        for _, child in pairs(h.gear) do
+            if type(child) == "table" and child.atlas then icon = child end
+        end
+        assertTrue(icon ~= nil, "the cog has an icon texture")
+        assertEq(icon.atlas, "questlog-icon-setting", "the quest log's own cog art")
+    end
+end)

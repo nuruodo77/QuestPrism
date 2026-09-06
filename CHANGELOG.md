@@ -66,7 +66,8 @@ they live. Your saved filters and presets carry over.
   settings button in the corner, with the list filling everything below it and the
   scroll bar down the outer edge. The settings button opens a menu carrying Follow my
   guide, the source, the scope, how many steps count, and the way into the full
-  settings window. The guide's status reads as the first line of the list.
+  settings window, and it wears the quest log's own cog. The guide's status reads as
+  the first line of the list.
 
 **Elsewhere**
 

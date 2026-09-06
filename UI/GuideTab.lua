@@ -308,6 +308,11 @@ local function syncHeader()
     scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 6, -6)
     scroll:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -6, 6)
+    -- Down the panel's outer edge, past the container, and set here rather than once
+    -- at creation because the scroll helper anchors the bar to the scroll frame.
+    scrollBar:ClearAllPoints()
+    scrollBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -(TOP_ROW_H + 4))
+    scrollBar:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -6, 8)
     emptyText:ClearAllPoints()
     emptyText:SetPoint("TOP", listInset, "TOP", 0, -30)
 end
@@ -532,14 +537,23 @@ local function createHeader()
     hdr.followLabel:SetPoint("LEFT", hdr.followCb, "RIGHT", 2, 0)
     hdr.followLabel:SetText(L.FOLLOW_GUIDE_LABEL)
 
-    hdr.gear = CreateFrame("Button", nil, panel)
-    hdr.gear:SetSize(22, 22)
-    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -6)
+    -- The quest log's own settings cog: a dropdown button carrying the questlog-icon-setting
+    -- atlas, so ours looks and behaves like the one above Blizzard's quest list.
+    hdr.gear = CreateFrame("DropdownButton", nil, panel, "UIPanelIconDropdownButtonTemplate")
+    if type(hdr.gear.SetupMenu) == "function" then
+        hdr.gear:SetupMenu(buildGuideMenu)
+    else
+        -- No such template: a plain button wearing the same atlas, opening the menu itself.
+        hdr.gear = CreateFrame("Button", nil, panel)
+        hdr.gear:SetSize(20, 20)
+        local icon = hdr.gear:CreateTexture(nil, "ARTWORK")
+        icon:SetAllPoints()
+        pcall(icon.SetAtlas, icon, "questlog-icon-setting")
+        hdr.gear:SetScript("OnClick", function(self) QuestPrism.GuideTab.OpenMenu(self) end)
+    end
+    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -8)
     -- Above the list container, which is created after it.
     hdr.gear:SetFrameLevel(panel:GetFrameLevel() + 10)
-    hdr.gear:SetNormalTexture("Interface\Buttons\UI-OptionsButton")
-    hdr.gear:SetHighlightTexture("Interface\Buttons\UI-Common-MouseHilight", "ADD")
-    hdr.gear:SetScript("OnClick", function(self) QuestPrism.GuideTab.OpenMenu(self) end)
     tooltip(hdr.gear, L.GUIDETAB_GEAR_TOOLTIP, "ANCHOR_LEFT")
 end
 
@@ -600,9 +614,9 @@ local function createUI()
     -- The bar sits outside the container, on the side, as the quest log's does.
     scroll = CreateFrame("ScrollFrame", nil, panel)
     scrollBar = CreateFrame("EventFrame", nil, panel, "MinimalScrollBar")
-    scrollBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -(TOP_ROW_H + 4))
-    scrollBar:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -6, 8)
     if ScrollUtil and ScrollUtil.InitScrollFrameWithScrollBar then
+        -- This anchors the bar to the scroll frame itself, so our own points go on
+        -- afterwards and are re-applied by syncHeader.
         pcall(ScrollUtil.InitScrollFrameWithScrollBar, scroll, scrollBar)
     end
     content = CreateFrame("Frame", nil, scroll)
