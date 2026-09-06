@@ -822,8 +822,11 @@ test("section headers show the quest log's plus when collapsed and minus when op
     C_QuestLog.IsQuestFlaggedCompleted = function() return false end
     C_QuestLog.GetTitleForQuestID = function(id) return "Quest " .. id end
     QuestPrism.Settings.Set("guideCollapsedToPickUp", false)
-    QuestPrism.GuideTab.Select(); MOCK.flushTimers()
+    -- An earlier test hid the panel through OnDisplayModeChanged without changing the
+    -- mode, so Select() alone would be a no-op; show it the same way.
+    QuestPrism.GuideTab.OnDisplayModeChanged(QuestPrism.GuideTab.MODE); MOCK.flushTimers()
     local h = QuestPrism.GuideTab.GetActiveHeaders()[1]
+    assertTrue(h ~= nil, "a section header rendered")
     assertEq(h.Expander.atlas, "common-button-list-minus", "open: minus")
     h:GetScript("OnClick")(h); MOCK.flushTimers()
     h = QuestPrism.GuideTab.GetActiveHeaders()[1]
