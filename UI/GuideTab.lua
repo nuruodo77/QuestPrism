@@ -605,7 +605,10 @@ local function createUI()
     setTabChecked(false)
 
     panel = CreateFrame("Frame", nil, QuestMapFrame)
-    panel:SetPoint("TOPLEFT", QuestMapFrame.ContentsAnchor, "TOPLEFT", 0, 0)
+    -- 29 below the content anchor, exactly as the Map Legend and Events frames are
+    -- anchored: that band is where a tab's heading lives. Starting at 0, as the quest
+    -- list does, put our heading up inside the quest log's header chrome.
+    panel:SetPoint("TOPLEFT", QuestMapFrame.ContentsAnchor, "TOPLEFT", 0, -29)
     panel:SetPoint("BOTTOMRIGHT", QuestMapFrame.ContentsAnchor, "BOTTOMRIGHT", -22, 0)
     panel:Hide()
     local bg = panel:CreateTexture(nil, "BACKGROUND")
@@ -718,14 +721,14 @@ local function describe(frame)
     end
     local shown, visible = call("IsShown"), call("IsVisible")
     local left, right = call("GetLeft"), call("GetRight")
-    local width, height = call("GetWidth"), call("GetHeight")
+    local top, bottom = call("GetTop"), call("GetBottom")
     -- A frame whose parent chain is hidden has no resolved position, so say which
     -- part is missing rather than printing nothing.
     if type(left) ~= "number" then
         return string.format("shown=%s visible=%s (not laid out: open the map on the QuestPrism tab)", tostring(shown), tostring(visible))
     end
-    return string.format("shown=%s visible=%s left=%.0f right=%.0f w=%.0f h=%.0f",
-        tostring(shown), tostring(visible), left, right or 0, width or 0, height or 0)
+    return string.format("shown=%s visible=%s x=%.0f..%.0f y=%.0f..%.0f",
+        tostring(shown), tostring(visible), left, right or 0, bottom or 0, top or 0)
 end
 
 local function report()
