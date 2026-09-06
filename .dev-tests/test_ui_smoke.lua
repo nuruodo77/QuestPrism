@@ -759,3 +759,14 @@ test("the settings menu toggles following, like the row does", function()
     assertFalse(QuestPrism.Sources.IsFollowing())
     ZGV = nil; QuestPrism.WorldMap.Refresh = orig
 end)
+
+
+test("/questprism tab reports where the tab's frames are", function()
+    MOCK.printed = {}
+    SlashCmdList["QUESTPRISM"]("tab")
+    assertTrue(#MOCK.printed >= 6, "one line per frame: " .. #MOCK.printed)
+    local joined = table.concat(MOCK.printed, "\n")
+    for _, want in ipairs({ "panel", "container", "ourBar", "cog", "QuestScrollFrame" }) do
+        assertTrue(joined:find(want, 1, true) ~= nil, "reports " .. want)
+    end
+end)

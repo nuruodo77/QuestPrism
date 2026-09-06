@@ -655,6 +655,33 @@ function QuestPrism.GuideTab.Sync()
     if panel:IsShown() then scheduleRender() end
 end
 
+-- Diagnostic (/questprism tab): where our own frames actually are, and whether any
+-- of Blizzard's quest list is still showing behind us. A scroll bar that never moves
+-- when ours does is usually theirs, not ours.
+function QuestPrism.GuideTab.Inspect()
+    local function rect(frame)
+        if type(frame) ~= "table" or type(frame.GetRect) ~= "function" then return "missing" end
+        local ok, left, bottom, width, height = pcall(frame.GetRect, frame)
+        if not ok or type(left) ~= "number" then return "no rect" end
+        local shown = type(frame.IsShown) == "function" and tostring(frame:IsShown()) or "?"
+        return string.format("shown=%s left=%.0f right=%.0f width=%.0f height=%.0f", shown, left, left + (width or 0), width or 0, height or 0)
+    end
+    print("|cff00ff00QuestPrism tab:|r ready=" .. tostring(ready) .. " mode=" .. tostring(type(QuestMapFrame) == "table" and QuestMapFrame.displayMode))
+    print("  panel      " .. rect(panel))
+    print("  container  " .. rect(listInset))
+    print("  scroll     " .. rect(scroll))
+    print("  ourBar     " .. rect(scrollBar))
+    print("  cog        " .. rect(hdr.gear))
+    -- Blizzard's own list and bar: if one of these is still shown, that is what is
+    -- being seen on the right, and it is not ours to move.
+    local theirs = _G.QuestScrollFrame
+    print("  QuestScrollFrame " .. rect(theirs))
+    if type(theirs) == "table" then
+        print("  theirBar   " .. rect(rawget(theirs, "ScrollBar") or _G.QuestScrollFrameScrollBar))
+    end
+    print("  QuestsFrame " .. rect(type(QuestMapFrame) == "table" and rawget(QuestMapFrame, "QuestsFrame")))
+end
+
 -- Exposed for tests.
 QuestPrism.GuideTab.IsCreated = function() return ready end
 QuestPrism.GuideTab.GetTab = function() return tab end

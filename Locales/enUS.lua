@@ -74,7 +74,7 @@ L.HELP_LINES = {
     "  /questprism options - the Escape-menu page",
     "  /questprism reset - show every quest type",
     "  /questprism debug - toggle diagnostic messages",
-    "  /questprism scan, inspect, tracker - diagnostics for bug reports",
+    "  /questprism scan, inspect, tracker, tab - diagnostics for bug reports",
 }
 L.TYPE_TIP_CAMPAIGN    = "Campaign: the expansion's main storyline quests (book icon)."
 L.TYPE_TIP_IMPORTANT   = "Important: quests the game flags as important, such as unlocks and major side chains (exclamation-in-shield icon)."

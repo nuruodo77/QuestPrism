@@ -43,6 +43,8 @@ SlashCmdList["QUESTPRISM"] = function(msg)
         QuestPrism.WorldMap.InspectPins()
     elseif cmd == "tracker" then
         QuestPrism.WorldQuests.Inspect()
+    elseif cmd == "tab" then
+        QuestPrism.GuideTab.Inspect()
     elseif cmd == "options" or cmd == "config" then
         QuestPrism.Options.Open()
     elseif cmd == "help" or cmd == "?" then
