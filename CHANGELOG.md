@@ -54,6 +54,9 @@ they live. Your saved filters and presets carry over.
 - The QuestPrism map tab never drew its quest type icons: it asked a namespace that
   does not exist. It now uses the same classification lookup as the map filter, so a
   quest gets the same icon in both places.
+- Blizzard's quest list left its own scroll bar on screen beside the QuestPrism tab,
+  so a second bar sat past the panel's edge and no amount of moving ours changed it.
+  It is faded out while our tab is up and restored when you switch back.
 - The map tab's quest list used the legacy scroll frame, with the old chunky scroll
   bar beside the quest log's modern one. It now uses the same thin bar as the settings
   window.

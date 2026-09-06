@@ -396,10 +396,40 @@ local function isActive()
     return type(QuestMapFrame) == "table" and QuestMapFrame.displayMode == MODE
 end
 
+-- Blizzard's quest list keeps its own scroll bar on screen beside our tab: its
+-- scroll frame stays shown even though the quests frame is hidden, so the bar sits
+-- in the gap past our panel's right edge and reads as a second, immovable bar.
+-- While our mode is active we fade it instead of hiding it: alpha leaves its shown
+-- state alone, so no secure code later reads a value we tainted. Nothing happens if
+-- it is not actually drawing.
+local theirBarFaded = false
+
+local function theirScrollBar()
+    local list = _G.QuestScrollFrame
+    return (type(list) == "table" and rawget(list, "ScrollBar")) or _G.QuestScrollFrameScrollBar
+end
+
+local function fadeTheirScrollBar(faded)
+    local bar = theirScrollBar()
+    if type(bar) ~= "table" or type(bar.SetAlpha) ~= "function" then return end
+    if faded and not theirBarFaded then
+        if type(bar.IsVisible) == "function" and not bar:IsVisible() then return end
+        theirBarFaded = true
+        pcall(bar.SetAlpha, bar, 0)
+        if type(bar.EnableMouse) == "function" then pcall(bar.EnableMouse, bar, false) end
+    elseif not faded and theirBarFaded then
+        theirBarFaded = false
+        pcall(bar.SetAlpha, bar, 1)
+        if type(bar.EnableMouse) == "function" then pcall(bar.EnableMouse, bar, true) end
+    end
+end
+QuestPrism.GuideTab.IsTheirBarFaded = function() return theirBarFaded end
+
 function QuestPrism.GuideTab.OnDisplayModeChanged(mode)
     local active = (mode == MODE)
     if panel then panel:SetShown(active) end
     setTabChecked(active)
+    pcall(fadeTheirScrollBar, active)
     if active then scheduleRender() end
 end
 
@@ -662,8 +692,10 @@ local function describe(frame)
     if type(frame) ~= "table" then return "missing" end
     local function call(method)
         if type(frame[method]) ~= "function" then return nil end
+        -- Keep false as false: "ok and value or nil" would report it as nil.
         local ok, value = pcall(frame[method], frame)
-        return ok and value or nil
+        if not ok then return nil end
+        return value
     end
     local shown, visible = call("IsShown"), call("IsVisible")
     local left, right = call("GetLeft"), call("GetRight")
@@ -673,7 +705,8 @@ local function describe(frame)
     if type(left) ~= "number" then
         return string.format("shown=%s visible=%s (not laid out: open the map on the QuestPrism tab)", tostring(shown), tostring(visible))
     end
-    return string.format("shown=%s left=%.0f right=%.0f w=%.0f h=%.0f", tostring(shown), left, right or 0, width or 0, height or 0)
+    return string.format("shown=%s visible=%s left=%.0f right=%.0f w=%.0f h=%.0f",
+        tostring(shown), tostring(visible), left, right or 0, width or 0, height or 0)
 end
 
 local function report()

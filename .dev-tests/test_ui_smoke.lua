@@ -775,3 +775,32 @@ test("/questprism tab reports where the tab's frames are", function()
     MOCK.flushTimers()
     assertTrue(#MOCK.printed >= 6, "reports again once the map has been opened")
 end)
+
+
+test("Blizzard's own scroll bar is faded while our tab is up, and restored after", function()
+    local bar = MOCK.newFrame({ alpha = 1 })
+    bar.IsVisible = function() return true end
+    bar.EnableMouse = function(self, on) self.mouse = on end
+    QuestScrollFrame = MOCK.newFrame()
+    QuestScrollFrame.ScrollBar = bar
+
+    QuestPrism.GuideTab.OnDisplayModeChanged(QuestPrism.GuideTab.MODE)
+    assertTrue(QuestPrism.GuideTab.IsTheirBarFaded(), "faded while ours is up")
+    assertEq(bar:GetAlpha(), 0); assertEq(bar.mouse, false, "and not clickable")
+
+    QuestPrism.GuideTab.OnDisplayModeChanged("Quests")
+    assertFalse(QuestPrism.GuideTab.IsTheirBarFaded(), "restored on the way out")
+    assertEq(bar:GetAlpha(), 1); assertEq(bar.mouse, true)
+end)
+
+test("a bar that is not drawing is left alone", function()
+    local bar = MOCK.newFrame({ alpha = 1 })
+    bar.IsVisible = function() return false end
+    QuestScrollFrame = MOCK.newFrame()
+    QuestScrollFrame.ScrollBar = bar
+    QuestPrism.GuideTab.OnDisplayModeChanged(QuestPrism.GuideTab.MODE)
+    assertFalse(QuestPrism.GuideTab.IsTheirBarFaded(), "nothing to hide, nothing touched")
+    assertEq(bar:GetAlpha(), 1)
+    QuestPrism.GuideTab.OnDisplayModeChanged("Quests")
+    QuestScrollFrame = nil
+end)
