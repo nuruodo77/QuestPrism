@@ -145,13 +145,13 @@ local function acquireHeader()
         header.Middle:SetPoint("TOPLEFT", header.Left, "TOPRIGHT")
         header.Middle:SetPoint("BOTTOMRIGHT", header.Right, "BOTTOMLEFT")
         pcall(header.Middle.SetAtlas, header.Middle, "_Options_ListExpand_Middle")
+        -- The plus / minus the quest log's own headers use, on the right as theirs is;
+        -- the atlas is chosen per state in layoutHeader.
         header.Expander = header:CreateTexture(nil, "ARTWORK")
-        header.Expander:SetSize(16, 16)
-        header.Expander:SetPoint("LEFT", header, "LEFT", 6, 0)
-        pcall(header.Expander.SetAtlas, header.Expander, "common-button-list-collapseExpand")
+        header.Expander:SetPoint("RIGHT", header, "RIGHT", -6, 0)
         header.Text = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        header.Text:SetPoint("LEFT", header.Expander, "RIGHT", 4, 0)
-        header.Text:SetPoint("RIGHT", header, "RIGHT", -6, 0)
+        header.Text:SetPoint("LEFT", header, "LEFT", 10, 0)
+        header.Text:SetPoint("RIGHT", header.Expander, "LEFT", -4, 0)
         header.Text:SetJustifyH("LEFT")
         local highlight = header:CreateTexture(nil, "HIGHLIGHT")
         highlight:SetAllPoints()
@@ -293,12 +293,9 @@ local function layoutHeader(text, width, y, sectionKey)
     header:SetEnabled(sectionKey ~= nil)
     header.Expander:SetShown(sectionKey ~= nil)
     if sectionKey then
-        -- One arrow atlas, turned to point down when the section is open.
         local collapsed = QuestPrism.Settings.Get(sectionKey) == true
-        pcall(header.Expander.SetRotation, header.Expander, collapsed and 0 or -math.pi / 2)
-        header.Text:SetPoint("LEFT", header.Expander, "RIGHT", 4, 0)
-    else
-        header.Text:SetPoint("LEFT", header, "LEFT", 8, 0)
+        -- Native size, as CollapseButtonMixin sets it.
+        pcall(header.Expander.SetAtlas, header.Expander, collapsed and "common-button-list-plus" or "common-button-list-minus", true)
     end
     return HEADER_H + 4
 end
@@ -315,8 +312,10 @@ local function syncHeader()
     listInset:SetPoint("TOPLEFT", panel, "TOPLEFT", -3, 7)
     listInset:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 3, -6)
     scroll:ClearAllPoints()
-    scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 6, -6)
-    scroll:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -6, 6)
+    -- The border art is thickest along the top, so the list starts further down there
+    -- than it stands in from the sides; otherwise the first line sits under the frame.
+    scroll:SetPoint("TOPLEFT", listInset, "TOPLEFT", 8, -16)
+    scroll:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -8, 8)
     -- Past the panel's right edge, under the cog. Set here rather than once at
     -- creation because the scroll helper anchors the bar to the scroll frame.
     scrollBar:ClearAllPoints()

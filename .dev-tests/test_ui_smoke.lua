@@ -811,3 +811,24 @@ test("the tab has a heading above its container, like the Map Legend and Events 
     assertTrue(title ~= nil, "heading exists")
     assertEq(title.text, QuestPrism_L.GUIDETAB_TITLE)
 end)
+
+
+test("section headers show the quest log's plus when collapsed and minus when open", function()
+    local orig = QuestPrism.WorldMap.Refresh; QuestPrism.WorldMap.Refresh = function() end
+    ZGV = { CurrentStepNum = 1, CurrentGuide = { title = "pm", steps = { { goals = { { questid = 601 } } } } }, AddMessageHandler = function() end }
+    QuestPrism.Settings.Set("guideSource", "Zygor"); QuestPrism.Settings.Set("guideScope", "step")
+    QuestPrism.Sources.Invalidate()
+    C_QuestLog.GetLogIndexForQuestID = function() return nil end
+    C_QuestLog.IsQuestFlaggedCompleted = function() return false end
+    C_QuestLog.GetTitleForQuestID = function(id) return "Quest " .. id end
+    QuestPrism.Settings.Set("guideCollapsedToPickUp", false)
+    QuestPrism.GuideTab.Select(); MOCK.flushTimers()
+    local h = QuestPrism.GuideTab.GetActiveHeaders()[1]
+    assertEq(h.Expander.atlas, "common-button-list-minus", "open: minus")
+    h:GetScript("OnClick")(h); MOCK.flushTimers()
+    h = QuestPrism.GuideTab.GetActiveHeaders()[1]
+    assertEq(h.Expander.atlas, "common-button-list-plus", "collapsed: plus")
+    h:GetScript("OnClick")(h); MOCK.flushTimers()
+    QuestPrism.Settings.Set("guideSource", "Off"); ZGV = nil
+    QuestPrism.WorldMap.Refresh = orig
+end)
