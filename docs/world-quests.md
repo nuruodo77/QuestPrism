@@ -34,8 +34,11 @@ Bounties (emissaries, callings) are quests that other world quests count toward.
   dim pins. Never touch a pin from inside `AcquirePin` (see section 15).
 - QuestPrism: `Hooks/WorldMap.lua` treats both templates as filterable; `Core/Filter.lua`
   types them `WorldQuest`; `Core/Rules.lua` hides them only under the world quest block.
-  Timed world quests come out as `Expedition` first (timer check), which the block also
-  catches through `Filter.IsWorldQuest(questID)`.
+  A world quest is typed `WorldQuest` whatever its timer: `Filter.IsExpeditionQuest`
+  answers false for any world quest before it looks at the countdown. (Until beta3 the
+  timer was checked first, and since every world quest has one, every world quest was
+  typed `Expedition`; the Expedition checkbox governed them and the World Quests row
+  governed nothing.)
 - Alternative lever: set the CVar `questPOIWQ` to 0. That is Blizzard's own switch and
   taint-free, but it is account-visible in the map's tracking menu and also affects the
   flight map summary. Worth considering as the *primary* map lever for the block.

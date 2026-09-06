@@ -120,9 +120,13 @@ function Filter.IsWorldQuest(questID)
 end
 
 -- Expeditions are zone events with a countdown. The timer identifies them no
--- matter which pin kind (area POI, world quest, addon pin) happens to draw them.
+-- matter which pin kind (area POI, addon pin) happens to draw them.
+-- A world quest is never an expedition, timer or not: every world quest carries a
+-- countdown, so testing the timer first typed all of them as Expedition and left the
+-- World Quests row governing nothing. World quests answer to their own row.
 function Filter.IsExpeditionQuest(questID)
     if not questID then return false end
+    if Filter.IsWorldQuest(questID) then return false end
     local api = C_TaskQuest and C_TaskQuest.GetQuestTimeLeftSeconds
     if not api then return false end
     local secondsLeft = api(questID)

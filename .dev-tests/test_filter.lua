@@ -37,18 +37,24 @@ test("world quest pins are typed WorldQuest, shown by default and hidden by the 
     QuestPrism.Settings.Set("HideWorldQuests", false)
 end)
 
-test("the block also catches world quests drawn as expeditions or by other pins, via the quest ID", function()
+test("a world quest is a world quest whatever its timer: its own row governs it, not Expedition", function()
+    -- Every world quest has a countdown. Until beta3 the timer was tested first, so all of
+    -- them were typed Expedition and the World Quests row governed nothing.
     MOCK.timeLeft[210] = 600; MOCK.worldQuests[210] = true
     local timed = { pinTemplate = "WorldMap_WorldQuestPinTemplate", questID = 210 }
-    assertEq(QuestPrism.Filter.GetPinType(timed), "Expedition", "timed pin still counts as an expedition")
+    assertEq(QuestPrism.Filter.GetPinType(timed), "WorldQuest", "the timer does not make it an expedition")
+    QuestPrism.Settings.Set("Expedition", false)
+    assertTrue(QuestPrism.Filter.ShouldShowPin(timed), "the Expedition row does not touch it")
     QuestPrism.Settings.Set("Expedition", true)
-    assertTrue(QuestPrism.Filter.ShouldShowPin(timed))
     QuestPrism.Settings.Set("HideWorldQuests", true)
-    assertFalse(QuestPrism.Filter.ShouldShowPin(timed), "blocked through IsWorldQuest")
+    assertFalse(QuestPrism.Filter.ShouldShowPin(timed), "the World Quests row does")
     assertFalse(QuestPrism.Rules.ShouldShow("LocalStory", 210), "any type, world quest id -> hidden")
     assertTrue(QuestPrism.Rules.ShouldShow("LocalStory", 211), "non world quest unaffected")
     QuestPrism.Settings.Set("HideWorldQuests", false)
-    MOCK.timeLeft[210] = nil; MOCK.worldQuests[210] = nil
+    -- A timed quest that is not a world quest is still an expedition.
+    MOCK.timeLeft[212] = 600
+    assertEq(QuestPrism.Filter.GetPinType({ pinTemplate = "QuestOfferPinTemplate", questID = 212 }), "Expedition", "timed, not a world quest")
+    MOCK.timeLeft[210] = nil; MOCK.worldQuests[210] = nil; MOCK.timeLeft[212] = nil
 end)
 
 test("GetPinType classifies offer, template, and expedition pins", function()
