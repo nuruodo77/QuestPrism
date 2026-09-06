@@ -804,3 +804,10 @@ test("a bar that is not drawing is left alone", function()
     QuestPrism.GuideTab.OnDisplayModeChanged("Quests")
     QuestScrollFrame = nil
 end)
+
+
+test("the tab has a heading above its container, like the Map Legend and Events tabs", function()
+    local title = QuestPrism.GuideTab.GetTitle()
+    assertTrue(title ~= nil, "heading exists")
+    assertEq(title.text, QuestPrism_L.GUIDETAB_TITLE)
+end)

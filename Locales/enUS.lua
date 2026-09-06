@@ -123,6 +123,7 @@ L.TOOLTIP_GUIDE_SCOPE      = "Which part of the guide counts: only the current s
 L.TOOLTIP_GUIDE_LOOKAHEAD  = "How many upcoming steps \"Next\" includes (1 to 10)."
 L.GUIDE_NO_SOURCE_MSG      = "|cff00ff00QuestPrism:|r No supported guide addon is active (Zygor, RestedXP, or a BtWQuests chain)."
 L.GUIDETAB_TOOLTIP         = "QuestPrism: guide quests"
+L.GUIDETAB_TITLE           = "QuestPrism"
 L.GUIDETAB_IN_LOG          = "In your log (%d)"
 L.GUIDETAB_TO_PICK_UP      = "To pick up (%d)"
 L.GUIDETAB_COMPLETED       = "%d already completed"

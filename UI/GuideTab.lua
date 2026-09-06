@@ -27,7 +27,7 @@ local LOOKAHEAD_MIN, LOOKAHEAD_MAX = 1, 10
 -- while theirs is faded. Children may extend past a parent that does not clip.
 local BAR_GAP, COG_H = 8, 20
 
-local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText
+local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText, titleText
 local ready = false -- true once the header and list exist; a half-built tab stays inert
 local hdr = {} -- gear: the settings cog in the right-hand strip
 local rowPool, headerPool = {}, {}
@@ -631,6 +631,14 @@ local function createUI()
     listInset.ScrollLine:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", 2, 3)
     pcall(listInset.ScrollLine.SetAtlas, listInset.ScrollLine, "questlog_line_scrollbar")
 
+    -- The tab's heading, built the way the Map Legend and Events tabs build theirs:
+    -- the same font, sitting just above the bordered container, 1 left and 3 up.
+    local titleFont = (type(_G.Game15Font_Shadow) == "table") and "Game15Font_Shadow" or "GameFontNormalLarge"
+    titleText = panel:CreateFontString(nil, "ARTWORK", titleFont)
+    titleText:SetWordWrap(false)
+    titleText:SetText(L.GUIDETAB_TITLE)
+    titleText:SetPoint("BOTTOM", listInset, "TOP", -1, 3)
+
     -- Plain scroll frame plus the modern thin scroll bar, the same pairing the
     -- settings window uses, instead of UIPanelScrollFrameTemplate's chunky legacy bar.
     -- The bar sits outside the container, on the side, as the quest log's does.
@@ -749,4 +757,5 @@ QuestPrism.GuideTab.GetHeaderWidgets = function() return hdr end
 QuestPrism.GuideTab.GetActiveHeaders = function() return activeHeaders end
 QuestPrism.GuideTab.GetActiveRows = function() return activeRows end
 QuestPrism.GuideTab.GetListInset = function() return listInset end
+QuestPrism.GuideTab.GetTitle = function() return titleText end
 QuestPrism.GuideTab.MODE = MODE
