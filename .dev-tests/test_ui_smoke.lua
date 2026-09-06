@@ -320,10 +320,19 @@ test("GuideTab creates its tab and panel and switches modes with Blizzard's mech
     QuestMapFrame_OpenToQuestDetails = function(id) modeEvents.opened = id end
 
     LOAD_ADDON_FILE("UI/Widgets.lua")
+    local tabBefore = #MOCK.createdFrames
     LOAD_ADDON_FILE("UI/GuideTab.lua")
     QuestPrism.GuideTab.Initialize()
     assertTrue(QuestPrism.GuideTab.IsCreated(), "panel created: " .. tostring(QuestPrism.GuideTab.lastError))
     assertEq(modeEvents.name, "QuestLog.SetDisplayMode", "listens to Blizzard's mode event")
+    -- The list uses the modern thin bar, like the settings window, not the legacy frame.
+    local tabTemplates = {}
+    for i = tabBefore + 1, #MOCK.createdFrames do
+        local f = MOCK.createdFrames[i]
+        if f.template then tabTemplates[f.template] = (tabTemplates[f.template] or 0) + 1 end
+    end
+    assertEq(tabTemplates["MinimalScrollBar"], 1, "modern scroll bar")
+    assertEq(tabTemplates["UIPanelScrollFrameTemplate"], nil, "no legacy scroll frame")
     local tab = QuestPrism.GuideTab.GetTab()
     assertTrue(tab ~= nil and tab.parent ~= QuestMapFrame, "tab is parented to QuestPrism's holder, not QuestMapFrame")
     assertEq(tab.template, "LargeSideTabButtonTemplate")

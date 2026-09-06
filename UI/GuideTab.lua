@@ -9,6 +9,8 @@ QuestPrism.GuideTab = {}
 -- Header: "Follow my guide" checkbox + gear (settings window), Source dropdown
 -- (only when more than one guide addon is available), scope buttons
 -- (Step / Next N / Guide) with a stepper for N, and the status line.
+-- Buttons come from UI/Widgets.lua and the list uses the modern thin scroll bar,
+-- so the tab matches the settings window and the quest log it sits beside.
 -- Click a log quest: Blizzard's details. Right-click: track / untrack.
 -- Tab switching goes through Blizzard's display mode (SetDisplayMode) with a mode
 -- of our own; the tab is parented to a holder frame (the template has parentArray).
@@ -19,7 +21,7 @@ local ICON = "Interface\\AddOns\\QuestPrism\\Textures\\icon"
 local RENDER_DELAY = 0.1
 local LOOKAHEAD_MIN, LOOKAHEAD_MAX = 1, 10
 
-local holder, tab, panel, header, scroll, content, emptyText
+local holder, tab, panel, header, scroll, scrollBar, content, emptyText
 local ready = false -- true once the header and list exist; a half-built tab stays inert
 local scopeButtons = {}
 local hdr = {} -- header widgets: followCb, followLabel, gear, sourceLabel, sourceDropdown, minus, plus, count
@@ -552,7 +554,15 @@ local function createUI()
     header:SetJustifyH("LEFT")
     header:SetWordWrap(true)
 
-    scroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
+    -- Plain scroll frame plus the modern thin scroll bar, the same pairing the
+    -- settings window uses, instead of UIPanelScrollFrameTemplate's chunky legacy bar.
+    scroll = CreateFrame("ScrollFrame", nil, panel)
+    scrollBar = CreateFrame("EventFrame", nil, panel, "MinimalScrollBar")
+    scrollBar:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 6, 0)
+    scrollBar:SetPoint("BOTTOMLEFT", scroll, "BOTTOMRIGHT", 6, 0)
+    if ScrollUtil and ScrollUtil.InitScrollFrameWithScrollBar then
+        pcall(ScrollUtil.InitScrollFrameWithScrollBar, scroll, scrollBar)
+    end
     content = CreateFrame("Frame", nil, scroll)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)
