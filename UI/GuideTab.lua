@@ -21,6 +21,7 @@ local MODE = "QuestPrism"
 local ICON = "Interface\\AddOns\\QuestPrism\\Textures\\icon"
 local RENDER_DELAY = 0.1
 local LOOKAHEAD_MIN, LOOKAHEAD_MAX = 1, 10
+local TOP_ROW_H = 34 -- the follow tick and the settings button live in this strip
 
 local holder, tab, panel, header, scroll, scrollBar, listInset, content, emptyText
 local ready = false -- true once the header and list exist; a half-built tab stays inert
@@ -296,9 +297,7 @@ end
 
 -- One control row, then the container fills everything below it, the way the quest
 -- log puts its search box above its list. Source, scope and the lookahead count all
--- live in the gear's menu instead of taking rows of their own.
-local TOP_ROW_H = 34
-
+-- live in the settings button's menu instead of taking rows of their own.
 local function syncHeader()
     if not ready then return end
     hdr.followCb:SetChecked(QuestPrism.Sources.IsFollowing())
@@ -465,6 +464,14 @@ local function buildGuideMenu(_, rootDescription)
     local function setScopeFromMenu(key) setScope(key) end
 
     rootDescription:CreateTitle(L.SECTION_GUIDE)
+    rootDescription:CreateCheckbox(L.FOLLOW_GUIDE_LABEL, function()
+        return QuestPrism.Sources.IsFollowing()
+    end, function()
+        if QuestPrism.Sources.SetFollowing(not QuestPrism.Sources.IsFollowing()) then
+            guideChanged()
+        end
+    end)
+    rootDescription:CreateDivider()
 
     local available = QuestPrism.Sources.AvailableNames()
     if #available > 1 then
@@ -526,8 +533,10 @@ local function createHeader()
     hdr.followLabel:SetText(L.FOLLOW_GUIDE_LABEL)
 
     hdr.gear = CreateFrame("Button", nil, panel)
-    hdr.gear:SetSize(20, 20)
-    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, -8)
+    hdr.gear:SetSize(22, 22)
+    hdr.gear:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -6)
+    -- Above the list container, which is created after it.
+    hdr.gear:SetFrameLevel(panel:GetFrameLevel() + 10)
     hdr.gear:SetNormalTexture("Interface\Buttons\UI-OptionsButton")
     hdr.gear:SetHighlightTexture("Interface\Buttons\UI-Common-MouseHilight", "ADD")
     hdr.gear:SetScript("OnClick", function(self) QuestPrism.GuideTab.OpenMenu(self) end)
@@ -591,8 +600,8 @@ local function createUI()
     -- The bar sits outside the container, on the side, as the quest log's does.
     scroll = CreateFrame("ScrollFrame", nil, panel)
     scrollBar = CreateFrame("EventFrame", nil, panel, "MinimalScrollBar")
-    scrollBar:SetPoint("TOPLEFT", listInset, "TOPRIGHT", 8, -2)
-    scrollBar:SetPoint("BOTTOMLEFT", listInset, "BOTTOMRIGHT", 8, 2)
+    scrollBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, -(TOP_ROW_H + 4))
+    scrollBar:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -6, 8)
     if ScrollUtil and ScrollUtil.InitScrollFrameWithScrollBar then
         pcall(ScrollUtil.InitScrollFrameWithScrollBar, scroll, scrollBar)
     end

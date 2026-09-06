@@ -485,6 +485,8 @@ test("the gear menu carries scope and the lookahead count, and right-click toggl
     local orig = QuestPrism.WorldMap.Refresh; QuestPrism.WorldMap.Refresh = function() end
     QuestPrism.Settings.Set("guideScope", "lookahead")
     QuestPrism.GuideTab.OpenMenu("gear")
+    assertEq(#menu.checkboxes, 1, "the follow toggle leads the menu")
+    assertEq(menu.checkboxes[1].text, QuestPrism_L.FOLLOW_GUIDE_LABEL)
     assertEq(#menu.radios, 3, "three scope choices at the top level")
     local guideRadio
     for _, r in ipairs(menu.radios) do if r.data == "guide" then guideRadio = r end end
@@ -749,4 +751,20 @@ test("the guide list has plate headers in a bordered inset, and they collapse", 
     assertEq(#QuestPrism.GuideTab.GetActiveRows(), 2, "reopened")
     QuestPrism.Settings.Set("guideSource", "Off"); ZGV = nil
     QuestPrism.WorldMap.Refresh = orig
+end)
+
+
+test("the settings menu toggles following, like the row does", function()
+    local orig = QuestPrism.WorldMap.Refresh; QuestPrism.WorldMap.Refresh = function() end
+    ZGV = { CurrentStepNum = 1, CurrentGuide = { title = "m", steps = { { goals = {} } } }, AddMessageHandler = function() end }
+    QuestPrism.Settings.Set("guideSource", "Off")
+    QuestPrism.GuideTab.OpenMenu("gear")
+    local follow = menu.checkboxes[1]
+    assertEq(follow.isSelected(), false)
+    follow.setSelected()
+    assertTrue(QuestPrism.Sources.IsFollowing(), "menu starts following")
+    assertEq(QuestPrism.GuideTab.GetHeaderWidgets().followCb:GetChecked(), true, "the row's tick follows suit")
+    follow.setSelected()
+    assertFalse(QuestPrism.Sources.IsFollowing())
+    ZGV = nil; QuestPrism.WorldMap.Refresh = orig
 end)
