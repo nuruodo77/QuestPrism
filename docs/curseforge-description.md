@@ -2,7 +2,7 @@
 
 ## Filter by quest type
 
-Turn quest pins on or off per type: Campaign, Important, Legendary, Meta, Repeatable, Local Story and Expedition events.
+Turn quest pins on or off per type: Campaign, Important, Legendary, Meta, Repeatable, Local Story and Events, named as the Map Legend names them.
 
 Every row works the same way: ticked means visible. Untick **World Quests** and their pins disappear from the world map and the flight map, the World Quests section leaves the objective tracker, the "World Quest" banner no longer plays when you walk into one, and the "World Quest Complete" alerts stop. (Minimap icons are drawn by the game itself and cannot be filtered by addons.)
 

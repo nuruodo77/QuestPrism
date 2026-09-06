@@ -836,3 +836,14 @@ test("section headers show the quest log's plus when collapsed and minus when op
     QuestPrism.Settings.Set("guideSource", "Off"); ZGV = nil
     QuestPrism.WorldMap.Refresh = orig
 end)
+
+
+test("quest rows use the game's own Map Legend wording when the client provides it", function()
+    local legend = QuestPrism.Panel.LegendText
+    assertEq(legend("MAP_LEGEND_EVENT", "fallback"), "fallback", "absent global: ours")
+    MAP_LEGEND_EVENT = "Event"
+    assertEq(legend("MAP_LEGEND_EVENT", "fallback"), "Event", "present: the game's")
+    MAP_LEGEND_EVENT = ""
+    assertEq(legend("MAP_LEGEND_EVENT", "fallback"), "fallback", "empty string counts as absent")
+    MAP_LEGEND_EVENT = nil
+end)

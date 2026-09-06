@@ -119,24 +119,19 @@ function Filter.IsWorldQuest(questID)
     return api ~= nil and api(questID) == true
 end
 
--- Expeditions are zone events with a countdown. The timer identifies them no
--- matter which pin kind (area POI, addon pin) happens to draw them.
--- A world quest is never an expedition, timer or not: every world quest carries a
--- countdown, so testing the timer first typed all of them as Expedition and left the
--- World Quests row governing nothing. World quests answer to their own row.
+-- Events: the Map Legend's "Limited Time Activities" entry for AreaPOIEventPinTemplate.
+-- They come from C_AreaPoiInfo.GetEventsForMap, carry no quest ID and no timer, so the
+-- template is the only thing that identifies one. (The old countdown test never found
+-- an event; every world quest has a countdown, so it typed all of those as events
+-- instead and left the World Quests row governing nothing.) The "Expedition" key is
+-- kept for saved settings; only the wording changed.
 function Filter.IsExpeditionQuest(questID)
-    if not questID then return false end
-    if Filter.IsWorldQuest(questID) then return false end
-    local api = C_TaskQuest and C_TaskQuest.GetQuestTimeLeftSeconds
-    if not api then return false end
-    local secondsLeft = api(questID)
-    return type(secondsLeft) == "number" and secondsLeft > 0
+    return false
 end
 
 function Filter.IsExpeditionPin(pin)
     if not pin then return false end
-    if pin.pinTemplate and EVENT_TEMPLATES[pin.pinTemplate] then return true end
-    return Filter.IsExpeditionQuest(Filter.GetQuestID(pin))
+    return pin.pinTemplate ~= nil and EVENT_TEMPLATES[pin.pinTemplate] == true
 end
 
 -- Type of a quest known only by ID. The modern client answers directly through

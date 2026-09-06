@@ -19,6 +19,15 @@ QuestPrism.Panel = {}
 local L = QuestPrism_L
 local ICON = "Interface\\AddOns\\QuestPrism\\Textures\\icon"
 
+-- The game's own Map Legend wording where it has some, ours where it does not, so a
+-- row reads exactly as the legend beside it does in whatever language the client runs.
+local function legend(globalName, fallback)
+    local text = _G[globalName]
+    if type(text) == "string" and text ~= "" then return text end
+    return fallback
+end
+QuestPrism.Panel.LegendText = legend
+
 local QUEST_TYPES = {
     { key = "Campaign",   label = L.QUEST_CAMPAIGN,    atlas = "questlog-questtypeicon-story",      tooltip = L.TYPE_TIP_CAMPAIGN,    desc = L.TYPE_DESC_CAMPAIGN },
     { key = "Important",  label = L.QUEST_IMPORTANT,   atlas = "questlog-questtypeicon-important",  tooltip = L.TYPE_TIP_IMPORTANT,   desc = L.TYPE_DESC_IMPORTANT },
@@ -26,7 +35,9 @@ local QUEST_TYPES = {
     { key = "Meta",       label = L.QUEST_META,        atlas = "questlog-questtypeicon-wrapper",    tooltip = L.TYPE_TIP_META,        desc = L.TYPE_DESC_META },
     { key = "Repeatable", label = L.QUEST_REPEATABLE,  atlas = "questlog-questtypeicon-recurring",  tooltip = L.TYPE_TIP_REPEATABLE,  desc = L.TYPE_DESC_REPEATABLE },
     { key = "LocalStory", label = L.QUEST_LOCAL_STORY, atlas = "questnormal",                       tooltip = L.TYPE_TIP_LOCAL_STORY, desc = L.TYPE_DESC_LOCAL_STORY },
-    { key = "Expedition", label = L.QUEST_EXPEDITION,  atlas = "worldquest-tracker-questmarker",    tooltip = L.TYPE_TIP_EXPEDITION,  desc = L.TYPE_DESC_EXPEDITION },
+    -- The legend's "Event" entry: its name, its tooltip as the description, its horn icon.
+    { key = "Expedition", label = legend("MAP_LEGEND_EVENT", L.QUEST_EXPEDITION), atlas = "minimap-genericevent-hornicon",
+      tooltip = L.TYPE_TIP_EXPEDITION, desc = legend("MAP_LEGEND_EVENT_TOOLTIP", L.TYPE_DESC_EXPEDITION) },
     { key = "Trivial",    label = L.QUEST_TRIVIAL,     trackingIcon = true, fallbackTexture = "Interface\\Minimap\\Tracking\\TrivialQuests",
       tooltip = L.TYPE_TIP_TRIVIAL, desc = L.TYPE_DESC_TRIVIAL },
 }
@@ -34,7 +45,7 @@ QuestPrism.Panel.QUEST_TYPES = QUEST_TYPES
 
 -- The world quest row is not a type toggle (it drives the block in Core/Rules.lua)
 -- but it sits in the same list with the same polarity: ticked = shown.
-local WORLD_QUEST_ROW = { label = L.QUEST_WORLD_QUESTS, atlas = "worldquest-questmarker-questbang", tooltip = L.TOOLTIP_WORLD_QUESTS, desc = L.TYPE_DESC_WORLD_QUESTS }
+local WORLD_QUEST_ROW = { label = legend("MAP_LEGEND_WORLDQUEST", L.QUEST_WORLD_QUESTS), atlas = "worldquest-questmarker-questbang", tooltip = L.TOOLTIP_WORLD_QUESTS, desc = L.TYPE_DESC_WORLD_QUESTS }
 
 local PANEL_FRAME_NAME = "QuestPrismPanelFrame"
 -- Two shapes for the same content. Beside the map (map button, tab gear): one tall

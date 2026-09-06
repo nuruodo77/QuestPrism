@@ -54,8 +54,11 @@ they live. Your saved filters and presets carry over.
 - World quests were never governed by the World Quests row on the map. Every world quest
   carries a countdown, and the pin typing tested the countdown first, so all of them were
   typed as Expedition: unticking Expedition hid every world quest, and ticking World
-  Quests brought none back. A world quest is now a world quest whatever its timer, and
-  Expedition only covers timed events that are not world quests.
+  Quests brought none back. A world quest is now a world quest, full stop.
+- The row that was called Expedition is the Map Legend's **Event** entry, the
+  limited-time activities drawn as map markers. It now takes its name, description and
+  horn icon from the game's own legend, in your client's language, and is identified by
+  the event pin itself rather than by a countdown, which never identified one.
 - The QuestPrism map tab never drew its quest type icons: it asked a namespace that
   does not exist. It now uses the same classification lookup as the map filter, so a
   quest gets the same icon in both places.

@@ -10,9 +10,10 @@ what it is waiting on.
   the only atlas added this session and is unverified; no other installed addon uses it.
   If the row shows no icon, that is the cause. The other eight atlases shipped in beta1
   and beta2, so they are verified by use.
-- [ ] **Expedition name.** The addon's own word for timed zone events. Read the Map
-  Legend entry for the countdown markers and rename the row and its description to match
-  if the game has a name for them.
+- [x] **Expedition name.** Resolved from Blizzard's own Map Legend source: the pins the
+  addon filed under "Expedition" are the legend's **Event** entry (`MAP_LEGEND_EVENT`,
+  "Limited Time Activities"). The row now takes its name, description and horn icon from
+  that entry at runtime, in the client's language. The saved key stays `Expedition`.
 - [ ] **One-column window.** 460 x 800 beside the map. Check that the Map Legend
   descriptions wrap the way the mock predicted and that the scroll bar is not permanently
   needed.

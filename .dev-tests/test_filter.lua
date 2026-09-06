@@ -51,9 +51,11 @@ test("a world quest is a world quest whatever its timer: its own row governs it,
     assertFalse(QuestPrism.Rules.ShouldShow("LocalStory", 210), "any type, world quest id -> hidden")
     assertTrue(QuestPrism.Rules.ShouldShow("LocalStory", 211), "non world quest unaffected")
     QuestPrism.Settings.Set("HideWorldQuests", false)
-    -- A timed quest that is not a world quest is still an expedition.
+    -- A countdown on its own types nothing: events are identified by their pin
+    -- template only, since they carry neither a quest ID nor a timer.
     MOCK.timeLeft[212] = 600
-    assertEq(QuestPrism.Filter.GetPinType({ pinTemplate = "QuestOfferPinTemplate", questID = 212 }), "Expedition", "timed, not a world quest")
+    assertEq(QuestPrism.Filter.GetPinType({ pinTemplate = "QuestOfferPinTemplate", questID = 212 }), "LocalStory", "a timer alone is not an event")
+    assertEq(QuestPrism.Filter.GetPinType({ pinTemplate = "AreaPOIEventPinTemplate" }), "Expedition", "the event pin template is")
     MOCK.timeLeft[210] = nil; MOCK.worldQuests[210] = nil; MOCK.timeLeft[212] = nil
 end)
 

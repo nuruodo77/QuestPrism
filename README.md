@@ -9,7 +9,7 @@ World of Warcraft Retail (12.1). English only.
 ## What it does
 
 - **Quest types.** Show or hide Campaign, Important, Legendary, Meta, Repeatable,
-  Local Story and Expedition pins on the world map. Trivial quests use the game's
+  Local Story and Event pins on the world map. Trivial quests use the game's
   own tracking filter, so that one applies to the minimap too.
 - **World Quests.** Untick the World Quests row and everything world quest related
   goes: the pins on the world map and the flight map, the World Quests section of
