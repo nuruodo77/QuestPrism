@@ -658,28 +658,50 @@ end
 -- Diagnostic (/questprism tab): where our own frames actually are, and whether any
 -- of Blizzard's quest list is still showing behind us. A scroll bar that never moves
 -- when ours does is usually theirs, not ours.
-function QuestPrism.GuideTab.Inspect()
-    local function rect(frame)
-        if type(frame) ~= "table" or type(frame.GetRect) ~= "function" then return "missing" end
-        local ok, left, bottom, width, height = pcall(frame.GetRect, frame)
-        if not ok or type(left) ~= "number" then return "no rect" end
-        local shown = type(frame.IsShown) == "function" and tostring(frame:IsShown()) or "?"
-        return string.format("shown=%s left=%.0f right=%.0f width=%.0f height=%.0f", shown, left, left + (width or 0), width or 0, height or 0)
+local function describe(frame)
+    if type(frame) ~= "table" then return "missing" end
+    local function call(method)
+        if type(frame[method]) ~= "function" then return nil end
+        local ok, value = pcall(frame[method], frame)
+        return ok and value or nil
     end
-    print("|cff00ff00QuestPrism tab:|r ready=" .. tostring(ready) .. " mode=" .. tostring(type(QuestMapFrame) == "table" and QuestMapFrame.displayMode))
-    print("  panel      " .. rect(panel))
-    print("  container  " .. rect(listInset))
-    print("  scroll     " .. rect(scroll))
-    print("  ourBar     " .. rect(scrollBar))
-    print("  cog        " .. rect(hdr.gear))
+    local shown, visible = call("IsShown"), call("IsVisible")
+    local left, right = call("GetLeft"), call("GetRight")
+    local width, height = call("GetWidth"), call("GetHeight")
+    -- A frame whose parent chain is hidden has no resolved position, so say which
+    -- part is missing rather than printing nothing.
+    if type(left) ~= "number" then
+        return string.format("shown=%s visible=%s (not laid out: open the map on the QuestPrism tab)", tostring(shown), tostring(visible))
+    end
+    return string.format("shown=%s left=%.0f right=%.0f w=%.0f h=%.0f", tostring(shown), left, right or 0, width or 0, height or 0)
+end
+
+local function report()
+    print("|cff00ff00QuestPrism tab:|r ready=" .. tostring(ready)
+        .. " mode=" .. tostring(type(QuestMapFrame) == "table" and QuestMapFrame.displayMode)
+        .. " ours=" .. tostring(MODE)
+        .. " map=" .. tostring(type(WorldMapFrame) == "table" and WorldMapFrame:IsShown()))
+    print("  panel      " .. describe(panel))
+    print("  container  " .. describe(listInset))
+    print("  scroll     " .. describe(scroll))
+    print("  ourBar     " .. describe(scrollBar))
+    print("  cog        " .. describe(hdr.gear))
     -- Blizzard's own list and bar: if one of these is still shown, that is what is
     -- being seen on the right, and it is not ours to move.
     local theirs = _G.QuestScrollFrame
-    print("  QuestScrollFrame " .. rect(theirs))
-    if type(theirs) == "table" then
-        print("  theirBar   " .. rect(rawget(theirs, "ScrollBar") or _G.QuestScrollFrameScrollBar))
+    print("  theirList  " .. describe(theirs))
+    print("  theirBar   " .. describe((type(theirs) == "table" and rawget(theirs, "ScrollBar")) or _G.QuestScrollFrameScrollBar))
+    print("  QuestsFrame " .. describe(type(QuestMapFrame) == "table" and rawget(QuestMapFrame, "QuestsFrame")))
+end
+
+-- Reports now and again in five seconds, so it can be run with the map open on our
+-- tab: nothing has a position while the map is closed or another tab is selected.
+function QuestPrism.GuideTab.Inspect()
+    report()
+    if C_Timer and C_Timer.After then
+        print("  |cffaaaaaa(open the world map on the QuestPrism tab; reporting again in 5s)|r")
+        C_Timer.After(5, function() pcall(report) end)
     end
-    print("  QuestsFrame " .. rect(type(QuestMapFrame) == "table" and rawget(QuestMapFrame, "QuestsFrame")))
 end
 
 -- Exposed for tests.

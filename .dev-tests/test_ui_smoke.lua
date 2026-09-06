@@ -766,7 +766,12 @@ test("/questprism tab reports where the tab's frames are", function()
     SlashCmdList["QUESTPRISM"]("tab")
     assertTrue(#MOCK.printed >= 6, "one line per frame: " .. #MOCK.printed)
     local joined = table.concat(MOCK.printed, "\n")
-    for _, want in ipairs({ "panel", "container", "ourBar", "cog", "QuestScrollFrame" }) do
+    for _, want in ipairs({ "panel", "container", "ourBar", "cog", "theirList", "theirBar" }) do
         assertTrue(joined:find(want, 1, true) ~= nil, "reports " .. want)
     end
+    -- It names both display modes, so a mismatch between them is visible at a glance.
+    assertTrue(joined:find("ours=", 1, true) ~= nil, "names our display mode")
+    MOCK.printed = {}
+    MOCK.flushTimers()
+    assertTrue(#MOCK.printed >= 6, "reports again once the map has been opened")
 end)
